@@ -160,7 +160,7 @@ public class Cars {
         message += "<h6>Цена: " + cars[pos].price +"</h6>";
         message += "<font color=#585858>Год: " + cars[pos].year;
         message += "<br>Пробег: " + cars[pos].mileage;
-        message += "<br>Город: " + cars[pos].city + "</font>";
+        message += "<br>Место: " + cars[pos].city + "</font>";
         return message;
     }
 
@@ -322,7 +322,7 @@ public class Cars {
         if(!elem.select("div.description > div.data > p:nth-child(2)").text().isEmpty())
             currentCar.city = elem.select("div.description > div.data > p:nth-child(2)").text();
         else
-            currentCar.city = "не указан";
+            currentCar.city = "не указано";
 
         cars[lastCar] = currentCar;
         lastCar++;
