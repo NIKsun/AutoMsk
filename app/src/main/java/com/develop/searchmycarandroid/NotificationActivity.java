@@ -196,10 +196,9 @@ public class NotificationActivity extends Activity {
         ad.setPositiveButton("Да", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int arg1) {
                 SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
-                String[] newStatus = sPref.getString("SearchMyCarService_status", "").split(";");
+                String[] newStatus = sPref.getString("SearchMyCarService_status", "false;false;false").split(";");
                 newStatus[monitorNumber - 1] = "false";
-
-                sPref.edit().putString("SearchMyCarService_shortMessage" + monitorNumber, "###");
+                sPref.edit().putString("SearchMyCarService_shortMessage" + monitorNumber, "###").commit();
                 sPref.edit().putString("SearchMyCarService_status", newStatus[0] + ";" + newStatus[1] + ";" + newStatus[2]).commit();
                 Toast.makeText(NotificationActivity.this, "Монитор " + monitorNumber + " остановлен", Toast.LENGTH_LONG).show();
                 Intent serviceIntent = new Intent(getApplicationContext(), MonitoringWork.class);
