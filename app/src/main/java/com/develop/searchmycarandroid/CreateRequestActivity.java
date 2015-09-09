@@ -37,6 +37,7 @@ import java.util.Map;
 
 public class CreateRequestActivity extends Activity implements OnClickListener {
     DBHelper dbHelper;
+    //
     static Dialog dialogPicker ;
     Boolean isUseSearchInAvito = null;
 
