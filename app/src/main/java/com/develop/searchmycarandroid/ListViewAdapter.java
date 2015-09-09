@@ -12,6 +12,9 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.InterstitialAd;
+
 import java.text.SimpleDateFormat;
 
 public class ListViewAdapter extends BaseAdapter{
@@ -20,9 +23,11 @@ public class ListViewAdapter extends BaseAdapter{
     Bitmap[] images;
     String lastCarDateAuto, lastCarDateAvito;
     Boolean isFromMonitor;
+    InterstitialAd mInterstitialAd;
+
 
     private static LayoutInflater inflater=null;
-    public ListViewAdapter(NotificationActivity mainActivity, Cars c, Bitmap[] imgs, String lastCarDateAuto, String lastCarDateAvito) {
+    public ListViewAdapter(NotificationActivity mainActivity, Cars c, Bitmap[] imgs, String lastCarDateAuto, String lastCarDateAvito, InterstitialAd mAd) {
         // TODO Auto-generated constructor stub
         context=mainActivity;
         this.lastCarDateAuto=lastCarDateAuto;
@@ -30,15 +35,18 @@ public class ListViewAdapter extends BaseAdapter{
         images = imgs;
         cars = c;
         isFromMonitor = true;
+        mInterstitialAd = mAd;
+
         inflater = ( LayoutInflater )context.
                 getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
-    public ListViewAdapter(ListOfCars mainActivity, Cars c, Bitmap[] imgs) {
+    public ListViewAdapter(ListOfCars mainActivity, Cars c, Bitmap[] imgs, InterstitialAd mAd) {
         // TODO Auto-generated constructor stub
         context=mainActivity;
         images = imgs;
         cars = c;
         isFromMonitor = false;
+        mInterstitialAd = mAd;
         inflater = ( LayoutInflater )context.
                 getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
@@ -107,9 +115,12 @@ public class ListViewAdapter extends BaseAdapter{
             @Override
             public void onClick(View v) {
                 // TODO Auto-generated method stub
-                Intent intent = new Intent(context,CarPage.class);
-                intent.putExtra("url",cars.getHref(position));
+
+                Intent intent = new Intent(context, CarPage.class);
+                intent.putExtra("url", cars.getHref(position));
                 context.startActivity(intent);
+                if (mInterstitialAd.isLoaded())
+                    mInterstitialAd.show();
             }
         });
         return rowView;

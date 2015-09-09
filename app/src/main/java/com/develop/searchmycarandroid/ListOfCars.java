@@ -27,6 +27,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
+
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -46,6 +49,7 @@ public class ListOfCars extends Activity {
     LoadListView loader = new LoadListView();
     Thread imageLoader = null;
     AlarmManager am;
+    InterstitialAd mInterstitialAd = new InterstitialAd(this);
 
 
     @Override
@@ -78,7 +82,7 @@ public class ListOfCars extends Activity {
     }
     @Override
     protected void onPause() {
-        //imageLoaderMayRunning = false;
+        imageLoaderMayRunning = false;
         super.onPause();
     }
 
@@ -86,6 +90,8 @@ public class ListOfCars extends Activity {
     protected void onResume(){
         super.onResume();
 
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mInterstitialAd.loadAd(adRequest);
         SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
         String status = sPref.getString("SearchMyCarService_status", "false;false;false");
         String[] stat = status.split(";");
@@ -112,6 +118,7 @@ public class ListOfCars extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.listofcars);
 
+        mInterstitialAd.setAdUnitId(getString(R.string.banner_id));
         toastErrorConnection = Toast.makeText(getApplicationContext(),
                 "Связь с сервером не установлена :(", Toast.LENGTH_SHORT);
         toastErrorCarList = Toast.makeText(getApplicationContext(),
@@ -387,7 +394,7 @@ public class ListOfCars extends Activity {
                     + carsAvito[0].getLenth() + " на Avito.ru, отсортировано по дате", Toast.LENGTH_LONG).show();
 
             ListView lv = (ListView) findViewById(R.id.listView);
-            lv.setAdapter(new ListViewAdapter(ListOfCars.this, result, images));
+            lv.setAdapter(new ListViewAdapter(ListOfCars.this, result, images,mInterstitialAd));
 
             imageLoaderMayRunning = true;
             startThread(result);
