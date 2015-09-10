@@ -25,6 +25,10 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
+
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -43,6 +47,7 @@ public class NotificationActivity extends Activity {
     Boolean imageLoaderMayRunning;
     Thread imageLoader = null;
     AlarmManager am;
+    InterstitialAd mInterstitialAd = new InterstitialAd(this);
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -125,11 +130,18 @@ public class NotificationActivity extends Activity {
         imageLoaderMayRunning = false;
         super.onPause();
     }
-
+    @Override
+    protected void onResume() {
+        super.onResume();
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mInterstitialAd.loadAd(adRequest);
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.monitor_list_of_cars);
+
+        mInterstitialAd.setAdUnitId(getString(R.string.banner_id));
 
         am = (AlarmManager) getSystemService(ALARM_SERVICE);
 
@@ -225,6 +237,7 @@ public class NotificationActivity extends Activity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+
             ProgressBar pb = (ProgressBar)findViewById(R.id.progressBar);
             pb.setVisibility(View.VISIBLE);
             TextView tv = (TextView)findViewById(R.id.textViewProgressBar);
@@ -368,7 +381,7 @@ public class NotificationActivity extends Activity {
             }
 
             ListView lv = (ListView) findViewById(R.id.listViewMonitor);
-            lv.setAdapter(new ListViewAdapter(NotificationActivity.this, result, images, lastCarDateAuto, lastCarDateAvito));
+            lv.setAdapter(new ListViewAdapter(NotificationActivity.this, result, images, lastCarDateAuto, lastCarDateAvito,mInterstitialAd));
 
             imageLoaderMayRunning = true;
             startThread(result);

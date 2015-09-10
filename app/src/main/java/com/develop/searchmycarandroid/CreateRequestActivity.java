@@ -29,6 +29,9 @@ import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.InterstitialAd;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -37,8 +40,11 @@ import java.util.Map;
 
 public class CreateRequestActivity extends Activity implements OnClickListener {
     DBHelper dbHelper;
+    //
     static Dialog dialogPicker ;
     Boolean isUseSearchInAvito = null;
+
+    private InterstitialAd mInterstitialAd;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -147,6 +153,8 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
         setContentView(R.layout.activity_create_request);
         dbHelper = new DBHelper(this);
 
+
+
         // clear year
         SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
         sPref.edit().putInt("StartYear", 1970).commit();
@@ -181,6 +189,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
 
         switch (v.getId()) {
             case R.id.buttonSearch:
+
                 Intent intent = new Intent(this, ListOfCars.class);
                 SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
                 SharedPreferences.Editor ed = sPref.edit();
