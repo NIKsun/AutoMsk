@@ -28,6 +28,8 @@ import android.widget.Toast;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -48,6 +50,7 @@ public class ListOfCars extends Activity {
     Thread imageLoader = null;
     AlarmManager am;
     InterstitialAd mInterstitialAd = new InterstitialAd(this);
+    Tracker mTracker;
 
 
     @Override
@@ -87,11 +90,16 @@ public class ListOfCars extends Activity {
     @Override
     protected void onResume(){
         super.onResume();
-
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mInterstitialAd.loadAd(adRequest);
         SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
         String[] stat = sPref.getString("SearchMyCarService_status", "false;false;false").split(";");
+        int adMobCounter = sPref.getInt("AdMobCounter",1);
+        if(adMobCounter == 3) {
+            AdRequest adRequest = new AdRequest.Builder().build();
+            mInterstitialAd.loadAd(adRequest);
+            sPref.edit().putInt("AdMobCounter",1).commit();
+        }
+        else
+            sPref.edit().putInt("AdMobCounter",adMobCounter+1).commit();
 
         Button b1 = (Button) findViewById(R.id.buttonMonitor1);
         Button b2 = (Button) findViewById(R.id.buttonMonitor2);
@@ -115,6 +123,11 @@ public class ListOfCars extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.listofcars);
+
+        AnalyticsApplication application = (AnalyticsApplication) getApplication();
+        mTracker = application.getDefaultTracker();
+        mTracker.setScreenName("List of car");
+        mTracker.send(new HitBuilders.ScreenViewBuilder().build());
 
         mInterstitialAd.setAdUnitId(getString(R.string.banner_id));
         toastErrorConnection = Toast.makeText(getApplicationContext(),
@@ -167,6 +180,8 @@ public class ListOfCars extends Activity {
                 ed.putString("SearchMyCarService_status", newStatus[0] + ";" + newStatus[1] + ";" + newStatus[2]);
                 ed.putString("SearchMyCarService_shortMessage" + buttonNumber, shortMessage);
                 ed.commit();
+
+                mTracker.send(new HitBuilders.EventBuilder().setCategory("List of Cars").setAction(shortMessage).build());
 
                 Intent serviceIntent = new Intent(getApplicationContext(), MonitoringWork.class);
                 serviceIntent.putExtra("SearchMyCarService_serviceID", buttonNumber);

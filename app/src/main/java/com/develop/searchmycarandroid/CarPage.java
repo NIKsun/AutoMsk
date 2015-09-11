@@ -9,6 +9,9 @@ import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
+
 import java.lang.ref.WeakReference;
 import java.util.concurrent.TimeUnit;
 
@@ -20,6 +23,11 @@ public class CarPage extends Activity{
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.car_web_page);
+
+        AnalyticsApplication application = (AnalyticsApplication) getApplication();
+        Tracker mTracker = application.getDefaultTracker();
+        mTracker.setScreenName("Web page");
+        mTracker.send(new HitBuilders.ScreenViewBuilder().build());
 
         mWebView = (WebView) findViewById(R.id.webview);
         mWebView.getSettings().setJavaScriptEnabled(true);
