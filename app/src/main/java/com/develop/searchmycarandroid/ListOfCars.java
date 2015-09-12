@@ -83,7 +83,6 @@ public class ListOfCars extends Activity {
     }
     @Override
     protected void onPause() {
-        imageLoaderMayRunning = false;
         super.onPause();
     }
 

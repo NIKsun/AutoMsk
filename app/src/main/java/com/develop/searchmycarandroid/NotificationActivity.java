@@ -130,7 +130,6 @@ public class NotificationActivity extends Activity {
     }
     @Override
     protected void onPause() {
-        imageLoaderMayRunning = false;
         super.onPause();
     }
     @Override
