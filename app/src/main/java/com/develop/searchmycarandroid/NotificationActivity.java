@@ -25,7 +25,6 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 import com.google.android.gms.analytics.HitBuilders;
@@ -175,7 +174,7 @@ public class NotificationActivity extends Activity {
         String requestAvito = sPref.getString("SearchMyCarServiceRequestAvito" + monitorNumber, "");
         lastCarDateAuto = sPref.getString("SearchMyCarService_LastCarDateAuto" + monitorNumber, "###");
         lastCarDateAvito = sPref.getString("SearchMyCarService_LastCarDateAvito" + monitorNumber, "###");
-        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, requestAuto, requestAvito);
+        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, requestAuto, requestAvito, "not###");
 
         final TextView textView = (TextView) findViewById(R.id.textViewSeekBar );
         SeekBar seekBar = (SeekBar) findViewById(R.id.seekbar);
@@ -242,7 +241,7 @@ public class NotificationActivity extends Activity {
 
     class LoadListViewMonitor extends AsyncTask<String, String, Cars> {
         Bitmap[] images;
-        final Cars[] carsAvto = new Cars[1], carsAvito = new Cars[1];
+        final Cars[] carsAvto = new Cars[1], carsAvito = new Cars[1], carsDrom = new Cars[1];
 
         @Override
         protected void onPreExecute() {
@@ -257,6 +256,44 @@ public class NotificationActivity extends Activity {
         @TargetApi(Build.VERSION_CODES.HONEYCOMB)
         @Override
         protected Cars doInBackground(final String... params) {
+            final Boolean[] bulDrom = {true}, connectionDromSuccess = {true};
+            Thread threadDrom = new Thread(new Runnable() {
+                @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+                public void run() {
+                    Document doc;
+                    try {
+                        doc = Jsoup.connect("http://auto.drom.ru/all/").userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
+                    }
+                    catch (HttpStatusException e)
+                    {
+                        bulDrom[0] = false;
+                        return;
+                    }
+                    catch (IOException e)
+                    {
+                        connectionDromSuccess[0] = false;
+                        return;
+                    }
+                    Elements mainElems = doc.select("body > div.main0 > div > div > table:nth-child(2) > tbody > tr > td:nth-child(1) > div > div:nth-child(2) > div:nth-child(9) > div.tab1 > table > tbody");
+                    if(mainElems != null) {
+                        mainElems = mainElems.first().children();
+                        carsDrom[0] = new Cars(mainElems.size());
+                        for (int i = 0; i < mainElems.size(); i++)
+                            if(mainElems.get(i).className().equals("row"))
+                                carsDrom[0].addFromDromRu(mainElems.get(i));
+                    }
+                    else
+                    {
+                        bulDrom[0] = false;
+                        return;
+                    }
+                }
+            });
+            if(!params[2].equals("###"))
+                threadDrom.start();
+            else
+                bulDrom[0] = false;
+
             final Boolean[] bulAvito = {true}, connectionAvitoSuccess = {true};
             Thread threadAvito = new Thread(new Runnable() {
                 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -267,7 +304,7 @@ public class NotificationActivity extends Activity {
                     }
                     catch (HttpStatusException e)
                     {
-                        bulAvito[0] =false;
+                        bulAvito[0] = false;
                         return;
                     }
                     catch (IOException e)
@@ -275,7 +312,14 @@ public class NotificationActivity extends Activity {
                         connectionAvitoSuccess[0] = false;
                         return;
                     }
-                    Elements mainElems = doc.select("#catalog > div.layout-internal.col-12.js-autosuggest__search-list-container > div.l-content.clearfix > div.clearfix > div.catalog.catalog_table > div.catalog-list.clearfix").first().children();
+                    Elements mainElems = doc.select("#catalog > div.layout-internal.col-12.js-autosuggest__search-list-container > div.l-content.clearfix > div.clearfix > div.catalog.catalog_table > div.catalog-list.clearfix");
+                    if(mainElems != null)
+                        mainElems = mainElems.first().children();
+                    else
+                    {
+                        bulAvito[0] = false;
+                        return;
+                    }
                     int length = 0;
                     for (int i = 0; i < mainElems.size(); i++)
                         length += mainElems.get(i).children().size();
@@ -286,7 +330,6 @@ public class NotificationActivity extends Activity {
                             carsAvito[0].addFromAvito(mainElems.get(i).children().get(j));
                         }
                     carsAvito[0].sortByDateAvito();
-
                 }
             });
             if(!params[1].equals("###"))
@@ -294,57 +337,65 @@ public class NotificationActivity extends Activity {
             else
                 bulAvito[0] = false;
 
-
-
             publishProgress("Загрузка с Auto.ru");
+
             Boolean bulAvto = true, connectionAutoSuccess = true;
             if(!params[0].equals("###")) {
                 Document doc = null;
                 try {
                     doc = Jsoup.connect(params[0]).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
-                } catch (IOException e) {
+                }
+                catch (HttpStatusException e)
+                {
+                    bulAvto = false;
+                }
+                catch (IOException e) {
                     connectionAutoSuccess = false;
                 }
-                if(connectionAutoSuccess) {
-                    Elements mainElems = doc.select("body > div.branding_fix > div.content.content_style > article > div.clearfix > div.b-page-wrapper > div.b-page-content").first().children();
-
-                    Elements listOfCars = null;
-                    for (int i = 0; i < mainElems.size(); i++) {
-                        String className = mainElems.get(i).className();
-                        if ((className.indexOf("widget widget_theme_white sales-list") == 0) && (className.length() == 36)) {
-                            listOfCars = mainElems.get(i).select("div.sales-list-item");
-                            break;
-                        }
-                    }
-                    if (listOfCars == null) {
+                if(connectionAutoSuccess && bulAvto) {
+                    Elements mainElems = doc.select("body > div.branding_fix > div.content.content_style > article > div.clearfix > div.b-page-wrapper > div.b-page-content");
+                    if(mainElems != null)
+                        mainElems = mainElems.first().children();
+                    else
                         bulAvto = false;
-                    }
-                    else {
-                        carsAvto[0] = new Cars(listOfCars.size());
-                        for (int i = 0; i < listOfCars.size(); i++)
-                            carsAvto[0].addFromAutoRu(listOfCars.get(i).select("table > tbody > tr").first());
+
+                    if(bulAvto) {
+                        Elements listOfCars = null;
+                        for (int i = 0; i < mainElems.size(); i++) {
+                            String className = mainElems.get(i).className();
+                            if ((className.indexOf("widget widget_theme_white sales-list") == 0) && (className.length() == 36)) {
+                                listOfCars = mainElems.get(i).select("div.sales-list-item");
+                                break;
+                            }
+                        }
+                        if (listOfCars == null) {
+                            bulAvto = false;
+                        } else {
+                            carsAvto[0] = new Cars(listOfCars.size());
+                            for (int i = 0; i < listOfCars.size(); i++)
+                                carsAvto[0].addFromAutoRu(listOfCars.get(i).select("table > tbody > tr").first());
+                        }
                     }
                 }
             }
             else
                 bulAvto = false;
 
-            if(!connectionAutoSuccess && !connectionAvitoSuccess[0]) {
+            if(!connectionAutoSuccess && !connectionAvitoSuccess[0] && !connectionDromSuccess[0]) {
                 toastErrorConnection.show();
                 return null;
             }
-            if(!connectionAvitoSuccess[0])
-                toastErrorConnectionAvito.show();
-            if(!connectionAutoSuccess)
-                toastErrorConnectionAuto.show();
             publishProgress("Загрузка с Avito.ru");
             while (threadAvito.isAlive()); //waiting
+            publishProgress("Загрузка с Drom.ru");
+            while (threadDrom.isAlive()); //waiting
             publishProgress("Подготовка результата");
-            if(!bulAvito[0] && !bulAvto)
+            if(!bulAvito[0] && !bulAvto && !bulDrom[0])
             {
                 toastErrorCarList.show();
                 return null;
             }
+
             SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
             SharedPreferences.Editor ed = sPref.edit();
             if(!bulAvito[0] || !connectionAvitoSuccess[0])
@@ -355,20 +406,20 @@ public class NotificationActivity extends Activity {
                 carsAvto[0] = new Cars(0);
             else
                 ed.putString("SearchMyCarService_LastCarDateAuto" + monitorNumber, String.valueOf(carsAvto[0].getCarDateLong(0)));
+            if(!bulDrom[0] || !connectionDromSuccess[0])
+                carsDrom[0] = new Cars(0);
             ed.commit();
 
-            if(carsAvto[0].getLenth() == 0 && carsAvito[0].getLenth() == 0)
+            Cars cars = Cars.merge(carsAvto[0], carsAvito[0], carsDrom[0]);
+            if(cars.getLength() == 0)
             {
-                toastErrorConnection.show();
+                toastErrorCarList.show();
                 return null;
             }
-
-            Cars cars = Cars.merge(carsAvto[0], carsAvito[0]);
             Bitmap LoadingImage = BitmapFactory.decodeResource(getResources(), R.drawable.res);
-            images = new Bitmap[cars.getLenth()];
-            for(int i=0;i<cars.getLenth();i++)
+            images = new Bitmap[cars.getLength()];
+            for(int i=0;i<cars.getLength();i++)
                 images[i] = LoadingImage;
-
             return cars;
         }
         @Override
@@ -401,7 +452,7 @@ public class NotificationActivity extends Activity {
             final Handler handler = new Handler();
             Runnable runnable = new Runnable() {
                 public void run() {
-                    for (int i = 0; i < result.getLenth(); i++) {
+                    for (int i = 0; i < result.getLength(); i++) {
                         try {
                             if(imageLoaderMayRunning)
                                 images[i] = BitmapFactory.decodeStream((InputStream) new URL(result.getImg(i)).getContent());

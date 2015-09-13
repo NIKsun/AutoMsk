@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:layout_gravity="top"
+    android:background="#0099cc">
+
+    <TextView
+        android:id="@+id/siteName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Drom.Ru"
+        android:textSize="30dp"
+        android:paddingTop="7dp"
+        android:paddingBottom="7dp"
+        android:paddingLeft="15dp"
+        android:textColor="#ffffffff" />
+    <TextView
+        android:id="@+id/countOfCars"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="10"
+        android:textSize="30dp"
+        android:paddingTop="7dp"
+        android:paddingBottom="7dp"
+        android:paddingLeft="10dp"
+        android:textColor="#00638c" />
+</LinearLayout>

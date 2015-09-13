@@ -17,7 +17,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.text.Html;
-import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -152,7 +152,7 @@ public class ListOfCars extends Activity {
         else
             shortMessage = "###";
         isListDownloading = true;
-        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, requestAuto, requestAvito);
+        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, requestAuto, requestAvito, "not ###");
     }
 
     int buttonNumber=0;
@@ -301,10 +301,11 @@ public class ListOfCars extends Activity {
                     }
                 }
             });
-            threadDrom.start();
-            while(threadDrom.isAlive());
+            if(!params[2].equals("###"))
+                threadDrom.start();
+            else
+                bulDrom[0] = false;
 
-            /*
             final Boolean[] bulAvito = {true}, connectionAvitoSuccess = {true};
             Thread threadAvito = new Thread(new Runnable() {
                 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -347,6 +348,7 @@ public class ListOfCars extends Activity {
                 threadAvito.start();
             else
                 bulAvito[0] = false;
+
             publishProgress("Загрузка с Auto.ru");
 
             Boolean bulAvto = true, connectionAutoSuccess = true;
@@ -391,14 +393,16 @@ public class ListOfCars extends Activity {
             else
                 bulAvto = false;
 
-            if(!connectionAutoSuccess && !connectionAvitoSuccess[0]) {
+            if(!connectionAutoSuccess && !connectionAvitoSuccess[0] && !connectionDromSuccess[0]) {
                 toastErrorConnection.show();
                 return null;
             }
             publishProgress("Загрузка с Avito.ru");
             while (threadAvito.isAlive()); //waiting
+            publishProgress("Загрузка с Drom.ru");
+            while (threadDrom.isAlive()); //waiting
             publishProgress("Подготовка результата");
-            if(!bulAvito[0] && !bulAvto)
+            if(!bulAvito[0] && !bulAvto && !bulDrom[0])
             {
                 toastErrorCarList.show();
                 return null;
@@ -411,24 +415,18 @@ public class ListOfCars extends Activity {
                 carsAvto[0] = new Cars(0);
             else
                 lastCarDateAuto = String.valueOf(carsAvto[0].getCarDateLong(0));
+            if(!bulDrom[0] || !connectionDromSuccess[0])
+                carsDrom[0] = new Cars(0);
 
-            if(carsAvto[0].getLenth() == 0 && carsAvito[0].getLenth() == 0)
+            Cars cars = Cars.merge(carsAvto[0], carsAvito[0], carsDrom[0]);
+            if(cars.getLength() == 0)
             {
-                toastErrorConnection.show();
+                toastErrorCarList.show();
                 return null;
             }
-
-            Cars cars = Cars.merge(carsAvto[0], carsAvito[0]);
             Bitmap LoadingImage = BitmapFactory.decodeResource(getResources(), R.drawable.res);
-            images = new Bitmap[cars.getLenth()];
-            for(int i=0;i<cars.getLenth();i++)
-                images[i] = LoadingImage;
-
-            return cars;*/
-            Cars cars = carsDrom[0];
-            Bitmap LoadingImage = BitmapFactory.decodeResource(getResources(), R.drawable.res);
-            images = new Bitmap[cars.getLenth()];
-            for(int i=0;i<cars.getLenth();i++)
+            images = new Bitmap[cars.getLength()];
+            for(int i=0;i<cars.getLength();i++)
                 images[i] = LoadingImage;
             return cars;
         }
@@ -452,12 +450,9 @@ public class ListOfCars extends Activity {
             }
 
             isListDownloading = false;
-            //Toast.makeText(ListOfCars.this, "Найдено " + carsAvto[0].getLenth() + " ПОСЛЕДНИХ объявлений на Auto.ru и "
-            //        + carsAvito[0].getLenth() + " на Avito.ru, отсортировано по дате", Toast.LENGTH_LONG).show();
 
             ListView lv = (ListView) findViewById(R.id.listView);
-            lv.setAdapter(new ListViewAdapter(ListOfCars.this, result, images,mInterstitialAd));
-
+            lv.setAdapter(new ListViewAdapter(ListOfCars.this, result, images, mInterstitialAd));
             imageLoaderMayRunning = true;
             startThread(result);
         }
@@ -465,7 +460,7 @@ public class ListOfCars extends Activity {
             final Handler handler = new Handler();
             Runnable runnable = new Runnable() {
                 public void run() {
-                    for (int i = 0; i < result.getLenth(); i++) {
+                    for (int i = 0; i < result.getLength(); i++) {
                         try {
                             if(imageLoaderMayRunning)
                                 images[i] = BitmapFactory.decodeStream((InputStream) new URL(result.getImg(i)).getContent());

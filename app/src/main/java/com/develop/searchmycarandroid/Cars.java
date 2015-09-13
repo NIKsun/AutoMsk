@@ -6,8 +6,6 @@ import android.util.Log;
 
 import org.jsoup.nodes.Element;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,7 +26,8 @@ public class Cars {
         String year;
         String city;
         Date timeOfCreate;
-        Boolean isFromAuto;
+        Boolean isFromAuto = false;
+        Boolean isFromAvito = false;
         boolean sorted;
     }
 
@@ -205,16 +204,16 @@ public class Cars {
         int pointer = 0;
         while(cars[pointer].sorted)
             pointer++;
-        Car[] result = new Car[getLenth()];
-        int counter1 = pointer, counter2 = getLenth()-pointer,i=0;
+        Car[] result = new Car[getLength()];
+        int counter1 = pointer, counter2 = getLength()-pointer,i=0;
         while ((counter1 != 0) && (counter2 != 0))
         {
-            if(cars[pointer-counter1].timeOfCreate.after(cars[getLenth() - counter2].timeOfCreate)) {
+            if(cars[pointer-counter1].timeOfCreate.after(cars[getLength() - counter2].timeOfCreate)) {
                 result[i] = cars[pointer - counter1];
                 counter1--;
             }
             else {
-                result[i] = cars[getLenth() - counter2];
+                result[i] = cars[getLength() - counter2];
                 counter2--;
             }
             i++;
@@ -227,42 +226,61 @@ public class Cars {
         }
         while(counter2 != 0)
         {
-            result[i] = cars[getLenth() - counter2];
+            result[i] = cars[getLength() - counter2];
             counter2--;
             i++;
         }
         cars = result;
     }
 
-    public static Cars merge(Cars carsAvto, Cars carsAvito)
+    public void addSeparator(String resourceName, int countOfCars)
     {
-        Cars result = new Cars(carsAvto.getLenth() + carsAvito.getLenth());
-        int counter1 = carsAvto.getLenth(), counter2 = carsAvito.getLenth(),i=0;
-        while ((counter1 != 0) && (counter2 != 0))
+        Car c = new Car();
+        c.id = "separator";
+        c.href = resourceName;
+        c.mileage = String.valueOf(countOfCars);
+        c.img = "http://auto.ru/i/all7/img/no-photo-thumb.png";
+        c.timeOfCreate = new Date();
+        cars[lastCar] = c;
+        lastCar++;
+    }
+    public static Cars merge(Cars carsAvto, Cars carsAvito, Cars carsDrom)
+    {
+        Cars result = new Cars(carsAvto.getLength() + carsAvito.getLength() + carsDrom.getLength() + 3);
+        if(carsAvto.getLength()>0)
         {
-            if(carsAvto.cars[carsAvto.getLenth()-counter1].timeOfCreate.after(carsAvito.cars[carsAvito.getLenth() - counter2].timeOfCreate)) {
-                result.cars[i] = carsAvto.cars[carsAvto.getLenth() - counter1];
-                counter1--;
+            result.addSeparator("Auto.ru",carsAvto.getLength());
+            int counter = 0;
+            for(int i=0;i<carsAvto.getLength();i++)
+            {
+                result.cars[result.getLength()] = carsAvto.cars[counter];
+                counter++;
+                result.lastCar++;
             }
-            else {
-                result.cars[i] = carsAvito.cars[carsAvito.getLenth() - counter2];
-                counter2--;
+        }
+        if(carsDrom.getLength()>0)
+        {
+            result.addSeparator("Drom.ru",carsDrom.getLength());
+
+            int counter = 0;
+            for(int i=0;i<carsDrom.getLength();i++)
+            {
+                result.cars[result.getLength()] = carsDrom.cars[counter];
+                counter++;
+                result.lastCar++;
             }
-            i++;
         }
-        while(counter1 != 0)
+        if(carsAvito.getLength()>0)
         {
-            result.cars[i] = carsAvto.cars[carsAvto.getLenth() - counter1];
-            counter1--;
-            i++;
+            result.addSeparator("Avito.ru",carsAvito.getLength());
+            int counter = 0;
+            for(int i=0;i<carsAvito.getLength();i++)
+            {
+                result.cars[result.getLength()] = carsAvito.cars[counter];
+                counter++;
+                result.lastCar++;
+            }
         }
-        while(counter2 != 0)
-        {
-            result.cars[i] = carsAvito.cars[carsAvito.getLenth() - counter2];
-            counter2--;
-            i++;
-        }
-        result.lastCar = carsAvto.getLenth() + carsAvito.getLenth();
         return result;
     }
 
@@ -270,12 +288,15 @@ public class Cars {
     {
         return cars[position].isFromAuto;
     }
-
+    public boolean carFromAvito(int position)
+    {
+        return cars[position].isFromAvito;
+    }
     @TargetApi(Build.VERSION_CODES.GINGERBREAD)
     public boolean addFromAvito(Element elem)
     {
         Car currentCar = new Car();
-        currentCar.isFromAuto = false;
+        currentCar.isFromAvito = true;
         if(elem == null){
             return false;
         }
@@ -373,7 +394,7 @@ public class Cars {
     {
         return cars[pos].img;
     }
-    public int getLenth()
+    public int getLength()
     {
         return lastCar;
     }

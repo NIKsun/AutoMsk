@@ -15,6 +15,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -651,17 +652,31 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
         for(int i=0; i<price_arr.length; ++i){
            if(i<51){
                price_arr[i]= String.valueOf(i*10000);
-               continue;
            }
-            if(i<76){
-                price_arr[i]= String.valueOf(Integer.parseInt(price_arr[i-1])+20000);
-                continue;
+           else
+               if(i<76){
+                    price_arr[i]= String.valueOf(Integer.parseInt(price_arr[i-1].replace(" ",""))+20000);
+               }
+               else
+                   if(i<96) {
+                        price_arr[i] = String.valueOf(Integer.parseInt(price_arr[i - 1].replace(" ","")) + 50000);
+                   }
+                   else
+                        price_arr[i] = String.valueOf(Integer.parseInt(price_arr[i - 1].replace(" ","")) + 100000);
+
+            int len = price_arr[i].length(), counter;
+            String result = "";
+            if(len%3!=0)
+                result = price_arr[i].substring(0,len%3)+" ";
+            counter = len%3;
+            while (counter < len)
+            {
+                Log.d("Drom", result);
+                result += price_arr[i].substring(counter,counter+3)+" ";
+                counter+=3;
             }
-            if(i<96) {
-                price_arr[i] = String.valueOf(Integer.parseInt(price_arr[i - 1]) + 50000);
-                continue;
-            }
-            price_arr[i] = String.valueOf(Integer.parseInt(price_arr[i - 1]) + 100000);
+            Log.d("Drom", result);
+            price_arr[i] = result.substring(0,result.length()-1);
         }
         np1.setDisplayedValues(price_arr);
         np2.setDisplayedValues(price_arr);

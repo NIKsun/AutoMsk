@@ -2,9 +2,9 @@ package com.develop.searchmycarandroid;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -13,7 +13,6 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.InterstitialAd;
 
 import java.text.SimpleDateFormat;
@@ -54,7 +53,7 @@ public class ListViewAdapter extends BaseAdapter{
     @Override
     public int getCount() {
         // TODO Auto-generated method stub
-        return cars.getLenth();
+        return cars.getLength();
     }
 
     @Override
@@ -79,51 +78,63 @@ public class ListViewAdapter extends BaseAdapter{
     public View getView(final int position, View convertView, ViewGroup parent) {
         // TODO Auto-generated method stub
         Holder holder=new Holder();
-        View rowView;
-        rowView = inflater.inflate(R.layout.listview, null);
-
-
-        if(isFromMonitor){
-            if(cars.carFromAuto(position)) {
-                if(lastCarDateAuto.equals("###"))
-                    rowView.setBackgroundColor(0xFFC1E1FF);
-                else {
-                    if (Long.parseLong(lastCarDateAuto)/1000 < cars.getCarDateLong(position)/1000) {//New cars
-                        rowView.setBackgroundColor(0xFFC1E1FF);
-                    }
-                }
-            } else {
-                if (lastCarDateAvito.equals("###"))
-                    rowView.setBackgroundColor(0xFFC1E1FF);
-                else {
-                    if (Long.parseLong(lastCarDateAvito)/1000 < cars.getCarDateLong(position)/1000) {    //New cars
-                        rowView.setBackgroundColor(0xFFC1E1FF);
-                    }
-                }
-            }
+        View rowView = null;
+        if(cars.cars[position].id.equals("separator"))
+        {
+            rowView = inflater.inflate(R.layout.separator, null);
+            rowView.setClickable(false);
+            holder.tv = (TextView)rowView.findViewById(R.id.siteName);
+            holder.tv.setText(cars.cars[position].href);
+            holder.tvt = (TextView)rowView.findViewById(R.id.countOfCars);
+            holder.tvt.setText(cars.cars[position].mileage);
         }
-
-        holder.tv=(TextView) rowView.findViewById(R.id.textView1);
-        holder.img=(ImageView) rowView.findViewById(R.id.imageView1);
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        holder.tvt=(TextView) rowView.findViewById(R.id.textViewTime);
-        holder.tvt.setText(format.format(cars.getCarDate(position)));
-        holder.tv.setText(Html.fromHtml(cars.getMessage(position)));
-        holder.tv.setLinksClickable(true);
-        holder.img.setImageBitmap(images[position]);
-
-        rowView.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // TODO Auto-generated method stub
-
-                Intent intent = new Intent(context, CarPage.class);
-                intent.putExtra("url", cars.getHref(position));
-                context.startActivity(intent);
-                if (mInterstitialAd.isLoaded())
-                    mInterstitialAd.show();
+        else {
+            rowView = inflater.inflate(R.layout.listview, null);
+            if (isFromMonitor) {
+                if (cars.carFromAuto(position)) {
+                    if (lastCarDateAuto.equals("###"))
+                        rowView.setBackgroundColor(0xFFC1E1FF);
+                    else {
+                        if (Long.parseLong(lastCarDateAuto) / 1000 < cars.getCarDateLong(position) / 1000) {//New cars
+                            rowView.setBackgroundColor(0xFFC1E1FF);
+                        }
+                    }
+                } else if(cars.carFromAvito(position)) {
+                    if (lastCarDateAvito.equals("###"))
+                        rowView.setBackgroundColor(0xFFC1E1FF);
+                    else {
+                        if (Long.parseLong(lastCarDateAvito) / 1000 < cars.getCarDateLong(position) / 1000) {    //New cars
+                            rowView.setBackgroundColor(0xFFC1E1FF);
+                        }
+                    }
+                }
             }
-        });
+            holder.tv = (TextView) rowView.findViewById(R.id.textView1);
+            holder.img = (ImageView) rowView.findViewById(R.id.imageView1);
+            SimpleDateFormat format;
+            if(cars.getCarDate(position).getHours() == 0 && cars.getCarDate(position).getMinutes() == 0 && cars.getCarDate(position).getSeconds() == 0)
+                format = new SimpleDateFormat("dd.MM.yyyy");
+            else
+                format = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+            holder.tvt = (TextView) rowView.findViewById(R.id.textViewTime);
+            holder.tvt.setText(format.format(cars.getCarDate(position)));
+            holder.tv.setText(Html.fromHtml(cars.getMessage(position)));
+            holder.tv.setLinksClickable(true);
+            holder.img.setImageBitmap(images[position]);
+
+            rowView.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // TODO Auto-generated method stub
+
+                    Intent intent = new Intent(context, CarPage.class);
+                    intent.putExtra("url", cars.getHref(position));
+                    context.startActivity(intent);
+                    if (mInterstitialAd.isLoaded())
+                        mInterstitialAd.show();
+                }
+            });
+        }
         return rowView;
     }
 
