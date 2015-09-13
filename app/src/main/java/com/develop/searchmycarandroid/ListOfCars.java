@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.text.Html;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -253,7 +254,7 @@ public class ListOfCars extends Activity {
 
     class LoadListView extends AsyncTask<String, String, Cars> {
         Bitmap[] images;
-        final Cars[] carsAvto = new Cars[1], carsAvito = new Cars[1];
+        final Cars[] carsAvto = new Cars[1], carsAvito = new Cars[1], carsDrom = new Cars[1];
 
         @Override
         protected void onPreExecute() {
@@ -267,6 +268,43 @@ public class ListOfCars extends Activity {
         @TargetApi(Build.VERSION_CODES.HONEYCOMB)
         @Override
         protected Cars doInBackground(final String... params) {
+            final Boolean[] bulDrom = {true}, connectionDromSuccess = {true};
+            Thread threadDrom = new Thread(new Runnable() {
+                @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+                public void run() {
+                    Document doc;
+                    try {
+                        doc = Jsoup.connect("http://auto.drom.ru/all/").userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
+                    }
+                    catch (HttpStatusException e)
+                    {
+                        bulDrom[0] = false;
+                        return;
+                    }
+                    catch (IOException e)
+                    {
+                        connectionDromSuccess[0] = false;
+                        return;
+                    }
+                    Elements mainElems = doc.select("body > div.main0 > div > div > table:nth-child(2) > tbody > tr > td:nth-child(1) > div > div:nth-child(2) > div:nth-child(9) > div.tab1 > table > tbody");
+                    if(mainElems != null) {
+                        mainElems = mainElems.first().children();
+                        carsDrom[0] = new Cars(mainElems.size());
+                        for (int i = 0; i < mainElems.size(); i++)
+                            if(mainElems.get(i).className().equals("row"))
+                                carsDrom[0].addFromDromRu(mainElems.get(i));
+                    }
+                    else
+                    {
+                        bulDrom[0] = false;
+                        return;
+                    }
+                }
+            });
+            threadDrom.start();
+            while(threadDrom.isAlive());
+
+            /*
             final Boolean[] bulAvito = {true}, connectionAvitoSuccess = {true};
             Thread threadAvito = new Thread(new Runnable() {
                 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -385,6 +423,13 @@ public class ListOfCars extends Activity {
             images = new Bitmap[cars.getLenth()];
             for(int i=0;i<cars.getLenth();i++)
                 images[i] = LoadingImage;
+
+            return cars;*/
+            Cars cars = carsDrom[0];
+            Bitmap LoadingImage = BitmapFactory.decodeResource(getResources(), R.drawable.res);
+            images = new Bitmap[cars.getLenth()];
+            for(int i=0;i<cars.getLenth();i++)
+                images[i] = LoadingImage;
             return cars;
         }
         @Override
@@ -407,8 +452,8 @@ public class ListOfCars extends Activity {
             }
 
             isListDownloading = false;
-            Toast.makeText(ListOfCars.this, "Найдено " + carsAvto[0].getLenth() + " ПОСЛЕДНИХ объявлений на Auto.ru и "
-                    + carsAvito[0].getLenth() + " на Avito.ru, отсортировано по дате", Toast.LENGTH_LONG).show();
+            //Toast.makeText(ListOfCars.this, "Найдено " + carsAvto[0].getLenth() + " ПОСЛЕДНИХ объявлений на Auto.ru и "
+            //        + carsAvito[0].getLenth() + " на Avito.ru, отсортировано по дате", Toast.LENGTH_LONG).show();
 
             ListView lv = (ListView) findViewById(R.id.listView);
             lv.setAdapter(new ListViewAdapter(ListOfCars.this, result, images,mInterstitialAd));

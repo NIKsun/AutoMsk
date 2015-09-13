@@ -2,6 +2,7 @@ package com.develop.searchmycarandroid;
 
 import android.annotation.TargetApi;
 import android.os.Build;
+import android.util.Log;
 
 import org.jsoup.nodes.Element;
 
@@ -42,6 +43,41 @@ public class Cars {
         lastCar = 0;
     }
     @TargetApi(Build.VERSION_CODES.GINGERBREAD)
+    public boolean addFromDromRu(Element elem)
+    {
+        if(lastCar >= capacity)
+            return false;
+        Car currentCar = new Car();
+        currentCar.isFromAuto = false;
+        currentCar.id = elem.attr("data-bull-id");
+        Element column = elem.select("td:nth-child(1) > center > nobr > a").first();
+        currentCar.href = column.attr("href");
+
+        Date createDate = new Date();
+        createDate.setDate(Integer.parseInt(column.text().split("-")[0]));
+        createDate.setMonth(Integer.parseInt(column.text().split("-")[1]) - 1);
+        createDate.setHours(0);
+        createDate.setMinutes(0);
+        createDate.setSeconds(0);
+        currentCar.timeOfCreate = createDate;
+        currentCar.img = elem.select("td.c_i > a:nth-child(2) > img").attr("src");
+
+        currentCar.message = elem.select("td:nth-child(3)").text()+", "+elem.select("td:nth-child(5)").text();
+        if(!elem.select("td:nth-child(3)").text().isEmpty())
+            currentCar.year = elem.select("td:nth-child(3)").text();
+        else
+            currentCar.year = "не указан";
+        if(!elem.select("td:nth-child(6)").text().isEmpty())
+            currentCar.mileage = elem.select("td:nth-child(6)").text().split(",")[0]+" 000 км";
+        else
+            currentCar.mileage = "не указан";
+        currentCar.price =  elem.select("td:nth-child(8) > span.f14").text();
+        currentCar.city = elem.select("td:nth-child(8) > span:nth-child(3)").text();
+        cars[lastCar] = currentCar;
+        lastCar++;
+        return true;
+    }
+
     public boolean addFromAutoRu(Element elem)
     {
         if(lastCar >= capacity)
