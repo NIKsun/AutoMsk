@@ -1,7 +1,6 @@
 package com.develop.searchmycarandroid;
 
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.PendingIntent;
@@ -16,7 +15,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -29,22 +27,18 @@ import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 
 public class CreateRequestActivity extends Activity implements OnClickListener {
     DBHelper dbHelper;
-    //
-    static Dialog dialogPicker ;
+    Tracker mTracker;
     Boolean isUseSearchInAvito = null;
-
-    private InterstitialAd mInterstitialAd;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -74,8 +68,10 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
             item.setChecked(isUseSearchInAvito);
             if(isUseSearchInAvito)
                 Toast.makeText(CreateRequestActivity.this,"Поиск на Авито включен",Toast.LENGTH_SHORT).show();
-            else
-                Toast.makeText(CreateRequestActivity.this,"Поиск на Авито отключен",Toast.LENGTH_SHORT).show();
+            else {
+                Toast.makeText(CreateRequestActivity.this, "Поиск на Авито отключен", Toast.LENGTH_SHORT).show();
+                mTracker.send(new HitBuilders.EventBuilder().setCategory("First Activity").setAction("Avito search OFF").build());
+            }
 
         }
         return super.onOptionsItemSelected(item);
@@ -153,10 +149,14 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
         setContentView(R.layout.activity_create_request);
         dbHelper = new DBHelper(this);
 
-
+        AnalyticsApplication application = (AnalyticsApplication) getApplication();
+        mTracker = application.getDefaultTracker();
+        mTracker.setScreenName("First Activity");
+        mTracker.send(new HitBuilders.ScreenViewBuilder().build());
 
         // clear year
         SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
+        sPref.edit().putInt("AdMobCounter", 1).commit();
         sPref.edit().putInt("StartYear", 1970).commit();
         sPref.edit().putInt("EndYear", 1900 + new Date().getYear()).commit();
         //clear price
@@ -511,7 +511,6 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
 
         @Override
         public void onCreate(SQLiteDatabase db) {
-            Log.d("11111111111111111111", "--- onCreate database ---");
             db.execSQL("create table modelsTable ("
                     + "id integer primary key autoincrement,"
                     + "modeluser text," + "modelrequest text,"+"modelrequestavito text,"+"modelrequestdrom text,"
@@ -543,7 +542,6 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                 cv.put("markarequestdrom", marks_split[j+3]);
                 db.insert("marksTable", null, cv);
             }
-            Log.d("11111111111111111111", "--- onCreate markstable ---");
             /**
              * 1. for user
              * 2. for request
@@ -564,7 +562,6 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                 cv.put("marka_id", models_split[i+4]);
                 db.insert("modelsTable", null, cv);
             }
-            Log.d("11111111111111111111", "--- onCreate success ---");
 
         }
 
@@ -1213,6 +1210,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
     }
     public void onClickMonitor(View v)
     {
+        mTracker.send(new HitBuilders.EventBuilder().setCategory("First Activity").setAction("Open monitor's menu").build());
         final Dialog dialog = new Dialog(this);
         dialog.setTitle("Меню мониторов");
         dialog.setContentView(R.layout.find_monitor);

@@ -28,6 +28,8 @@ import android.widget.Toast;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -48,6 +50,7 @@ public class NotificationActivity extends Activity {
     Thread imageLoader = null;
     AlarmManager am;
     InterstitialAd mInterstitialAd = new InterstitialAd(this);
+    Tracker mTracker;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -133,8 +136,15 @@ public class NotificationActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mInterstitialAd.loadAd(adRequest);
+        SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
+        int adMobCounter = sPref.getInt("AdMobCounter",1);
+        if(adMobCounter == 3) {
+            AdRequest adRequest = new AdRequest.Builder().build();
+            mInterstitialAd.loadAd(adRequest);
+            sPref.edit().putInt("AdMobCounter",1).commit();
+        }
+        else
+            sPref.edit().putInt("AdMobCounter",adMobCounter+1).commit();
     }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -142,6 +152,11 @@ public class NotificationActivity extends Activity {
         setContentView(R.layout.monitor_list_of_cars);
 
         mInterstitialAd.setAdUnitId(getString(R.string.banner_id));
+
+        AnalyticsApplication application = (AnalyticsApplication) getApplication();
+        mTracker = application.getDefaultTracker();
+        mTracker.setScreenName("Notification activity");
+        mTracker.send(new HitBuilders.ScreenViewBuilder().build());
 
         am = (AlarmManager) getSystemService(ALARM_SERVICE);
 
@@ -192,14 +207,11 @@ public class NotificationActivity extends Activity {
                         PendingIntent pIntent = PendingIntent.getService(getApplicationContext(), monitorNumber, serviceIntent, 0);
                         am.setRepeating(AlarmManager.ELAPSED_REALTIME, SystemClock.elapsedRealtime() + (progress + 4) * 60000, (progress + 4) * 60000, pIntent);
 
+                        mTracker.send(new HitBuilders.EventBuilder().setCategory("Notification Activity").setAction("Period:" + String.valueOf(progress + 4)).build());
                         Toast.makeText(getApplicationContext(),"Новый период установлен",Toast.LENGTH_SHORT).show();
                     }
                 });
     }
-
-
-
-
     public void onClickStart(View v) {
         AlertDialog.Builder ad;
         ad = new AlertDialog.Builder(NotificationActivity.this);
@@ -216,7 +228,7 @@ public class NotificationActivity extends Activity {
                 Intent serviceIntent = new Intent(getApplicationContext(), MonitoringWork.class);
                 PendingIntent pIntent = PendingIntent.getService(getApplicationContext(), monitorNumber, serviceIntent, 0);
                 am.cancel(pIntent);
-                finish();
+                mTracker.send(new HitBuilders.EventBuilder().setCategory("Notification Activity").setAction("Monitor stopped").build());                finish();
             }
         });
         ad.setNegativeButton("Нет", new DialogInterface.OnClickListener() {
@@ -230,7 +242,6 @@ public class NotificationActivity extends Activity {
     }
 
     class LoadListViewMonitor extends AsyncTask<String, String, Cars> {
-        String[] imagesRef;
         Bitmap[] images;
         final Cars[] carsAvto = new Cars[1], carsAvito = new Cars[1];
 

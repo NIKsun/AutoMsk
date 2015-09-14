@@ -2,6 +2,7 @@ package com.develop.searchmycarandroid;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.text.Html;
 import android.view.LayoutInflater;

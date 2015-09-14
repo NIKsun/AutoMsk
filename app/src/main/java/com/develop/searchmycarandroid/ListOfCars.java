@@ -2,7 +2,6 @@ package com.develop.searchmycarandroid;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
 import android.app.PendingIntent;
@@ -29,6 +28,8 @@ import android.widget.Toast;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -38,7 +39,6 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.List;
 
 
 public class ListOfCars extends Activity {
@@ -50,6 +50,7 @@ public class ListOfCars extends Activity {
     Thread imageLoader = null;
     AlarmManager am;
     InterstitialAd mInterstitialAd = new InterstitialAd(this);
+    Tracker mTracker;
 
 
     @Override
@@ -89,16 +90,21 @@ public class ListOfCars extends Activity {
     @Override
     protected void onResume(){
         super.onResume();
-
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mInterstitialAd.loadAd(adRequest);
         SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
-        String status = sPref.getString("SearchMyCarService_status", "false;false;false");
-        String[] stat = status.split(";");
+        String[] stat = sPref.getString("SearchMyCarService_status", "false;false;false").split(";");
+        int adMobCounter = sPref.getInt("AdMobCounter",1);
+        if(adMobCounter == 3) {
+            AdRequest adRequest = new AdRequest.Builder().build();
+            mInterstitialAd.loadAd(adRequest);
+            sPref.edit().putInt("AdMobCounter",1).commit();
+        }
+        else
+            sPref.edit().putInt("AdMobCounter",adMobCounter+1).commit();
 
         Button b1 = (Button) findViewById(R.id.buttonMonitor1);
         Button b2 = (Button) findViewById(R.id.buttonMonitor2);
         Button b3 = (Button) findViewById(R.id.buttonMonitor3);
+
         if (stat[0].equals("true"))
             b1.setText(Html.fromHtml("Монитор 1<br><font color=green face=cursive>запущен</font>"));
         else
@@ -117,6 +123,11 @@ public class ListOfCars extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.listofcars);
+
+        AnalyticsApplication application = (AnalyticsApplication) getApplication();
+        mTracker = application.getDefaultTracker();
+        mTracker.setScreenName("List of car");
+        mTracker.send(new HitBuilders.ScreenViewBuilder().build());
 
         mInterstitialAd.setAdUnitId(getString(R.string.banner_id));
         toastErrorConnection = Toast.makeText(getApplicationContext(),
@@ -146,7 +157,6 @@ public class ListOfCars extends Activity {
 
     int buttonNumber=0;
     public void onClickStart(View v) {
-
         ad = new AlertDialog.Builder(ListOfCars.this);
         ad.setTitle("Запустить мониторинг?");
         ad.setMessage("Будут приходить уведомления о поступлении новых авто.");
@@ -170,11 +180,8 @@ public class ListOfCars extends Activity {
                 ed.putString("SearchMyCarService_status", newStatus[0] + ";" + newStatus[1] + ";" + newStatus[2]);
                 ed.putString("SearchMyCarService_shortMessage" + buttonNumber, shortMessage);
                 ed.commit();
-                /*
-                Intent serviceIntent = new Intent(ListOfCars.this, MonitoringService.class);
-                serviceIntent.putExtra("SearchMyCarService_serviceID", buttonNumber);
-                startService(serviceIntent);
-                */
+
+                mTracker.send(new HitBuilders.EventBuilder().setCategory("List of Cars").setAction(shortMessage).build());
 
                 Intent serviceIntent = new Intent(getApplicationContext(), MonitoringWork.class);
                 serviceIntent.putExtra("SearchMyCarService_serviceID", buttonNumber);
@@ -212,7 +219,6 @@ public class ListOfCars extends Activity {
 
         String[] status = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE).getString("SearchMyCarService_status", "false;false;false").split(";");
 
-
         Intent intent = new Intent(ListOfCars.this, NotificationActivity.class);
         switch (v.getId()) {
             case R.id.buttonMonitor1:
@@ -247,7 +253,6 @@ public class ListOfCars extends Activity {
     }
 
     class LoadListView extends AsyncTask<String, String, Cars> {
-        String[] imagesRef;
         Bitmap[] images;
         final Cars[] carsAvto = new Cars[1], carsAvito = new Cars[1];
 
@@ -273,7 +278,7 @@ public class ListOfCars extends Activity {
                     }
                     catch (HttpStatusException e)
                     {
-                        bulAvito[0] =false;
+                        bulAvito[0] = false;
                         return;
                     }
                     catch (IOException e)
@@ -281,7 +286,14 @@ public class ListOfCars extends Activity {
                         connectionAvitoSuccess[0] = false;
                         return;
                     }
-                    Elements mainElems = doc.select("#catalog > div.layout-internal.col-12.js-autosuggest__search-list-container > div.l-content.clearfix > div.clearfix > div.catalog.catalog_table > div.catalog-list.clearfix").first().children();
+                    Elements mainElems = doc.select("#catalog > div.layout-internal.col-12.js-autosuggest__search-list-container > div.l-content.clearfix > div.clearfix > div.catalog.catalog_table > div.catalog-list.clearfix");
+                    if(mainElems != null)
+                        mainElems = mainElems.first().children();
+                    else
+                    {
+                        bulAvito[0] = false;
+                        return;
+                    }
                     int length = 0;
                     for (int i = 0; i < mainElems.size(); i++)
                         length += mainElems.get(i).children().size();
@@ -292,43 +304,50 @@ public class ListOfCars extends Activity {
                             carsAvito[0].addFromAvito(mainElems.get(i).children().get(j));
                         }
                     carsAvito[0].sortByDateAvito();
-
                 }
             });
             if(!params[1].equals("###"))
                 threadAvito.start();
             else
                 bulAvito[0] = false;
-
-
-
             publishProgress("Загрузка с Auto.ru");
+
             Boolean bulAvto = true, connectionAutoSuccess = true;
             if(!params[0].equals("###")) {
                 Document doc = null;
                 try {
                     doc = Jsoup.connect(params[0]).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
-                } catch (IOException e) {
+                }
+                catch (HttpStatusException e)
+                {
+                    bulAvto = false;
+                }
+                catch (IOException e) {
                     connectionAutoSuccess = false;
                 }
-                if(connectionAutoSuccess) {
-                    Elements mainElems = doc.select("body > div.branding_fix > div.content.content_style > article > div.clearfix > div.b-page-wrapper > div.b-page-content").first().children();
-
-                    Elements listOfCars = null;
-                    for (int i = 0; i < mainElems.size(); i++) {
-                        String className = mainElems.get(i).className();
-                        if ((className.indexOf("widget widget_theme_white sales-list") == 0) && (className.length() == 36)) {
-                            listOfCars = mainElems.get(i).select("div.sales-list-item");
-                            break;
-                        }
-                    }
-                    if (listOfCars == null) {
+                if(connectionAutoSuccess && bulAvto) {
+                    Elements mainElems = doc.select("body > div.branding_fix > div.content.content_style > article > div.clearfix > div.b-page-wrapper > div.b-page-content");
+                    if(mainElems != null)
+                        mainElems = mainElems.first().children();
+                    else
                         bulAvto = false;
-                    }
-                    else {
-                        carsAvto[0] = new Cars(listOfCars.size());
-                        for (int i = 0; i < listOfCars.size(); i++)
-                            carsAvto[0].addFromAutoRu(listOfCars.get(i).select("table > tbody > tr").first());
+
+                    if(bulAvto) {
+                        Elements listOfCars = null;
+                        for (int i = 0; i < mainElems.size(); i++) {
+                            String className = mainElems.get(i).className();
+                            if ((className.indexOf("widget widget_theme_white sales-list") == 0) && (className.length() == 36)) {
+                                listOfCars = mainElems.get(i).select("div.sales-list-item");
+                                break;
+                            }
+                        }
+                        if (listOfCars == null) {
+                            bulAvto = false;
+                        } else {
+                            carsAvto[0] = new Cars(listOfCars.size());
+                            for (int i = 0; i < listOfCars.size(); i++)
+                                carsAvto[0].addFromAutoRu(listOfCars.get(i).select("table > tbody > tr").first());
+                        }
                     }
                 }
             }
@@ -367,7 +386,6 @@ public class ListOfCars extends Activity {
             images = new Bitmap[cars.getLenth()];
             for(int i=0;i<cars.getLenth();i++)
                 images[i] = LoadingImage;
-
             return cars;
         }
         @Override
