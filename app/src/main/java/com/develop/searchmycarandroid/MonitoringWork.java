@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
@@ -30,16 +31,17 @@ public class MonitoringWork extends Service {
 
     public class ServiceThread implements Runnable {
         public int serviceId;
-        public String requestAvito, requestAuto;
-        public ServiceThread(int Id, String requestAvito, String requestAuto) {
+        public String requestAvito, requestAuto, requestDrom;
+        public ServiceThread(int Id, String requestAvito, String requestAuto, String requestDrom) {
             this.serviceId=Id;
             this.requestAuto = requestAuto;
             this.requestAvito = requestAvito;
+            this.requestDrom = requestDrom;
         }
         @TargetApi(Build.VERSION_CODES.HONEYCOMB)
         public void run() {
             try {
-                ServiceProcess(serviceId, requestAvito, requestAuto);
+                ServiceProcess(serviceId, requestAvito, requestAuto, requestDrom);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -56,13 +58,12 @@ public class MonitoringWork extends Service {
         SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
         String[] status = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE).getString("SearchMyCarService_status", "false;false;false").split(";");
         int number = intent.getIntExtra("SearchMyCarService_serviceID",0);
-        Log.d("Alarm", String.valueOf(number));
         if(number == 0)
             return START_STICKY;
         if(status[number-1].equals("true")) {
             String requestAuto = sPref.getString("SearchMyCarServiceRequestAuto" + number, "");
             String requestAvito = sPref.getString("SearchMyCarServiceRequestAvito" + number, "");
-            Runnable st = new ServiceThread(number, requestAvito, requestAuto);
+            Runnable st = new ServiceThread(number, requestAvito, requestAuto, "http://auto.drom.ru/all/page");
             new Thread(st).start();
         }
         return START_STICKY;
@@ -78,30 +79,29 @@ public class MonitoringWork extends Service {
 
 
 
-    void ServiceProcess(final int serviceID, final String requestAvito, final String requestAuto) throws InterruptedException {
+    void ServiceProcess(final int serviceID, final String requestAvito, final String requestAuto, final String requestDrom) throws InterruptedException {
         SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
         final String lastCarDateAuto = sPref.getString("SearchMyCarService_LastCarDateAuto" + serviceID, "###");
         final String lastCarDateAvito = sPref.getString("SearchMyCarService_LastCarDateAvito" + serviceID, "###");
-        final int[] counter = {0};
-        int tryCounter = 0;
-        final boolean[] isSuccess = {false};
+        final String lastCarIdDrom  = sPref.getString("SearchMyCarService_LastCarIdDrom" + serviceID, "###");
+        final int[][] counter = {{0}};
 
-        while(!isSuccess[0] && tryCounter < 3) {
-            Log.d("AlarmT", "start");
-            Thread t = new Thread(new Runnable() {
-                @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-                public void run() {
-                    counter[0] = 0;
-                    Document doc = null;
-                    Elements mainElems;
-                    boolean isConnected = true, isConnectedAvito = true;
-                    if(!requestAuto.equals("###")) {
+        Thread t = new Thread(new Runnable() {
+            @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+            public void run() {
+                int tryCounter = 0;
+                boolean isSuccess = false, isConnectedAuto = true, isConnectedAvito = true, isConnectedDrom = true;
+                Document doc = null;
+                Elements mainElems;
+                while(!isSuccess && tryCounter < 3) {
+                    if(!requestAuto.equals("###") && (!isConnectedAuto || tryCounter == 0)) {
+                        isConnectedAuto = true;
                         try {
                             doc = Jsoup.connect(requestAuto).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
                         } catch (IOException e) {
-                            isConnected = false;
+                            isConnectedAuto = false;
                         }
-                        if(isConnected) {
+                        if(isConnectedAuto) {
                             mainElems = doc.select("body > div.branding_fix > div.content.content_style > article > div.clearfix > div.b-page-wrapper > div.b-page-content").first().children();
 
                             Elements listOfCars = null;
@@ -118,55 +118,89 @@ public class MonitoringWork extends Service {
                                     for (int i = 0; i < listOfCars.size(); i++) {
                                         buf = Cars.getDateAuto(listOfCars.get(i).select("table > tbody > tr").first());
                                         if (buf != null)
-                                            counter[0]++;
+                                            counter[0][0]++;
                                     }
                                 } else {
                                     for (int i = 0; i < listOfCars.size(); i++) {
                                         buf = Cars.getDateAuto(listOfCars.get(i).select("table > tbody > tr").first());
                                         if (buf != null && Long.parseLong(lastCarDateAuto)/1000 < buf.getTime()/1000)
-                                            counter[0]++;
+                                            counter[0][0]++;
                                     }
-
                                 }
                             }
                         }
                     }
-                    if(!requestAvito.equals("###")) {
+                    if(!requestAvito.equals("###") && (!isConnectedAvito || tryCounter == 0)) {
+                        isConnectedAvito = true;
                         try {
                             doc = Jsoup.connect(requestAvito).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
                         } catch (Exception e) {
-                            if(isConnected)
-                                isConnectedAvito = false;
-                            else
-                                return;
+                            isConnectedAvito = false;
                         }
-                        mainElems = doc.select("#catalog > div.layout-internal.col-12.js-autosuggest__search-list-container > div.l-content.clearfix > div.clearfix > div.catalog.catalog_table > div.catalog-list.clearfix").first().children();
+                        if(isConnectedAvito) {
+                            mainElems = doc.select("#catalog > div.layout-internal.col-12.js-autosuggest__search-list-container > div.l-content.clearfix > div.clearfix > div.catalog.catalog_table > div.catalog-list.clearfix").first().children();
 
-                        if (lastCarDateAvito.equals("###")) {
-                            for (int i = 0; i < mainElems.size(); i++)
-                                for (int j = 0; j < mainElems.get(i).children().size(); j++)
-                                    counter[0]++;
-                        } else {
-                            for (int i = 0; i < mainElems.size(); i++)
-                                for (int j = 0; j < mainElems.get(i).children().size(); j++) {
-                                    if (Long.parseLong(lastCarDateAvito)/1000 < Cars.getDateAvito(mainElems.get(i).children().get(j)).getTime()/1000)
-                                        counter[0]++;
+                            if (lastCarDateAvito.equals("###")) {
+                                for (int i = 0; i < mainElems.size(); i++)
+                                    for (int j = 0; j < mainElems.get(i).children().size(); j++)
+                                        counter[0][0]++;
+                            } else {
+                                for (int i = 0; i < mainElems.size(); i++)
+                                    for (int j = 0; j < mainElems.get(i).children().size(); j++) {
+                                        if (Long.parseLong(lastCarDateAvito) / 1000 < Cars.getDateAvito(mainElems.get(i).children().get(j)).getTime() / 1000)
+                                            counter[0][0]++;
+                                    }
+                            }
+                        }
+                    }
+                    if(!requestDrom.equals("###")  && (!isConnectedDrom || tryCounter == 0))
+                    {
+                        Integer counterDromCars = 0, pageCounter = 1;
+                        isConnectedDrom = true;
+                        while(counterDromCars < 20) {
+                            try {
+                                doc = Jsoup.connect("http://auto.drom.ru/all/page"+pageCounter).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
+                            } catch (Exception e) {
+                                isConnectedDrom = false;
+                                break;
+                            }
+                            if(isConnectedDrom)
+                            {
+                                mainElems = doc.select("body > div.main0 > div.main1 > div.main2 > table:nth-child(2) > tbody > tr > td:nth-child(1) > div.content > div:nth-child(2) > div:nth-child(8) > table > tbody");
+                                if (mainElems.isEmpty())
+                                    mainElems = doc.select("body > div.main0 > div > div > table:nth-child(2) > tbody > tr > td:nth-child(1) > div > div:nth-child(2) > div:nth-child(9) > div.tab1 > table > tbody");
+
+                                if (!mainElems.isEmpty())
+                                {
+                                    mainElems = mainElems.first().children();
+                                    for (int i = 0; i < mainElems.size(); i++)
+                                        if (mainElems.get(i).className().equals("row"))
+                                        {
+                                            String id = Cars.getCarIdDrom(mainElems.get(i));
+                                            if(!id.equals("pinned"))
+                                            {
+                                                counterDromCars++;
+                                                if(!id.equals(lastCarIdDrom))
+                                                    counter[0][0]++;
+                                            }
+                                        }
                                 }
+                                else
+                                    break;
+                            }
+                            pageCounter++;
                         }
-
                     }
-                    if(isConnected && isConnectedAvito) {
-                        isSuccess[0] = true;
-                    }
+                    if(isConnectedAuto && isConnectedAvito && isConnectedDrom)
+                        break;
+                    tryCounter++;
                 }
-            });
-            t.start();
-            while (t.isAlive());
-            tryCounter ++;
-        }
-        Log.d("AlarmFinish", String.valueOf(counter[0]));
-        if(counter[0] != 0) {
-            sendNotification(counter[0], serviceID);
+            }
+        });
+        t.start();
+        while (t.isAlive());
+        if(counter[0][0] != 0) {
+            sendNotification(counter[0][0], serviceID);
         }
 
     }

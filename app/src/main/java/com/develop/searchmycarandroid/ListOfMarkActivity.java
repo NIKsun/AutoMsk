@@ -155,39 +155,20 @@ public class ListOfMarkActivity extends Activity {
         }
 
         ViewHolder viewHolder;
-
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-
             if(convertView==null)
             {
                 convertView=inflater.inflate(R.layout.list_of_marks, null);
                 viewHolder=new ViewHolder();
-
-                //cache the views
                 viewHolder.name=(TextView) convertView.findViewById(R.id.textViewW);
-
-                //link the cached views to the convertview
                 convertView.setTag(viewHolder);
-                //Pair <String, ViewHolder> pair = Pair.create(searchResults.get(position).toString(), viewHolder);
-                //convertView.setTag(pair);
             }
             else {
                 Log.d("size", String.valueOf(position));
                 viewHolder = (ViewHolder) convertView.getTag();
             }
-
-
-            //set the data to be displayed
-           // if(searchResults.size()>position)
-                viewHolder.name.setText(searchResults.get(position).toString());
-            /*else {
-                viewHolder.name.setText("");
-
-            }*/
-
-
-            //return the view to be displayed
+            viewHolder.name.setText(searchResults.get(position).toString());
             return convertView;
         }
 

@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.View;
+import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
@@ -29,9 +32,13 @@ public class CarPage extends Activity{
         mTracker.setScreenName("Web page");
         mTracker.send(new HitBuilders.ScreenViewBuilder().build());
 
+
         mWebView = (WebView) findViewById(R.id.webview);
         mWebView.getSettings().setJavaScriptEnabled(true);
-        mWebView.setScrollBarStyle(WebView.SCROLLBARS_OUTSIDE_OVERLAY);
+        mWebView.getSettings().setSupportZoom(true);
+        mWebView.getSettings().setDisplayZoomControls(true);
+
+        mWebView.clearCache(true);
 
         class MyWebViewClient extends WebViewClient {
             private final long LOADING_ERROR_TIMEOUT = TimeUnit.SECONDS.toMillis(45);
@@ -150,10 +157,15 @@ public class CarPage extends Activity{
         };
 
         mWebView.setWebViewClient(new MyWebViewClient());
-        mWebView.loadUrl(getIntent().getStringExtra("url"));
+        String url = getIntent().getStringExtra("url");
+        mWebView.loadUrl(url);
+        if(url.indexOf("drom.ru") != -1)
+            mTracker.send(new HitBuilders.EventBuilder().setCategory("Web page").setAction("Drom.ru").setValue(1).build());
+        else if(url.indexOf("avito.ru") != -1)
+            mTracker.send(new HitBuilders.EventBuilder().setCategory("Web page").setAction("Avito.ru").setValue(1).build());
+        else
+            mTracker.send(new HitBuilders.EventBuilder().setCategory("Web page").setAction("Auto.ru").setValue(1).build());
     }
-
-
 
     @Override
     public void onBackPressed() {

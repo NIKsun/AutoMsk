@@ -71,7 +71,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                 Toast.makeText(CreateRequestActivity.this,"Поиск на Авито включен",Toast.LENGTH_SHORT).show();
             else {
                 Toast.makeText(CreateRequestActivity.this, "Поиск на Авито отключен", Toast.LENGTH_SHORT).show();
-                mTracker.send(new HitBuilders.EventBuilder().setCategory("First Activity").setAction("Avito search OFF").build());
+                mTracker.send(new HitBuilders.EventBuilder().setCategory("Additional features").setAction("Avito search OFF").build());
             }
 
         }
@@ -152,7 +152,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
 
         AnalyticsApplication application = (AnalyticsApplication) getApplication();
         mTracker = application.getDefaultTracker();
-        mTracker.setScreenName("First Activity");
+        mTracker.setScreenName("Start activity");
         mTracker.send(new HitBuilders.ScreenViewBuilder().build());
 
         // clear year
@@ -671,11 +671,9 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
             counter = len%3;
             while (counter < len)
             {
-                Log.d("Drom", result);
                 result += price_arr[i].substring(counter,counter+3)+" ";
                 counter+=3;
             }
-            Log.d("Drom", result);
             price_arr[i] = result.substring(0,result.length()-1);
         }
         np1.setDisplayedValues(price_arr);
@@ -697,8 +695,8 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
             @Override
             public void onClick(View v) {
 
-                Integer start = Integer.parseInt(price_arr[np1.getValue() - 1]);
-                Integer end = Integer.parseInt(price_arr[np2.getValue() - 1]);
+                Integer start = Integer.parseInt(price_arr[np1.getValue() - 1].replace(" ",""));
+                Integer end = Integer.parseInt(price_arr[np2.getValue() - 1].replace(" ",""));
                 if(start > end)
                 {
                     Toast t = Toast.makeText(getApplicationContext(),"Параметры заданы некорректно",Toast.LENGTH_SHORT);
@@ -707,8 +705,8 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                 else {
 
                     SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
-                    sPref.edit().putInt("StartPrice", Integer.parseInt(price_arr[np1.getValue() - 1])).commit();
-                    sPref.edit().putInt("EndPrice", Integer.parseInt(price_arr[np2.getValue() - 1])).commit();
+                    sPref.edit().putInt("StartPrice", start).commit();
+                    sPref.edit().putInt("EndPrice", end).commit();
 
                     Button b2 = (Button) findViewById(R.id.price_button);
                     b2.setText("Цена: от " + price_arr[np1.getValue() - 1] + " до " + price_arr[np2.getValue() - 1]);
@@ -1207,7 +1205,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
     }
     public void onClickMonitor(View v)
     {
-        mTracker.send(new HitBuilders.EventBuilder().setCategory("First Activity").setAction("Open monitor's menu").build());
+        mTracker.send(new HitBuilders.EventBuilder().setCategory("Additional features").setAction("Open monitor's menu").build());
         final Dialog dialog = new Dialog(this);
         dialog.setTitle("Меню мониторов");
         dialog.setContentView(R.layout.find_monitor);

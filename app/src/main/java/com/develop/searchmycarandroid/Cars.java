@@ -42,12 +42,21 @@ public class Cars {
         lastCar = 0;
     }
     @TargetApi(Build.VERSION_CODES.GINGERBREAD)
-    public boolean addFromDromRu(Element elem)
+    public static String getCarIdDrom(Element elem)
+    {
+        if(elem.select("td:nth-child(1) > center > a > img").first() != null)
+            if(elem.select("td:nth-child(1) > center > a > img").first().className().equals("pinned"))
+                return "pinned";
+        return elem.attr("data-bull-id");
+    }
+    public boolean appendFromDromRu(Element elem)
     {
         if(lastCar >= capacity)
             return false;
+        if(elem.select("td:nth-child(1) > center > a > img").first() != null)
+            if(elem.select("td:nth-child(1) > center > a > img").first().className().equals("pinned"))
+                return false;
         Car currentCar = new Car();
-        currentCar.isFromAuto = false;
         currentCar.id = elem.attr("data-bull-id");
         Element column = elem.select("td:nth-child(1) > center > nobr > a").first();
         currentCar.href = column.attr("href");
@@ -62,12 +71,15 @@ public class Cars {
         currentCar.img = elem.select("td.c_i > a:nth-child(2) > img").attr("src");
 
         currentCar.message = elem.select("td:nth-child(3)").text()+", "+elem.select("td:nth-child(5)").text();
-        if(!elem.select("td:nth-child(3)").text().isEmpty())
-            currentCar.year = elem.select("td:nth-child(3)").text();
+        if(!elem.select("td:nth-child(4)").text().isEmpty())
+            currentCar.year = elem.select("td:nth-child(4)").text();
         else
             currentCar.year = "не указан";
         if(!elem.select("td:nth-child(6)").text().isEmpty())
-            currentCar.mileage = elem.select("td:nth-child(6)").text().split(",")[0]+" 000 км";
+            if(!elem.select("td:nth-child(6)").text().equals("новый"))
+                currentCar.mileage = elem.select("td:nth-child(6)").text().split(",")[0]+" 000 км";
+            else
+                currentCar.mileage = "новый авто";
         else
             currentCar.mileage = "не указан";
         currentCar.price =  elem.select("td:nth-child(8) > span.f14").text();

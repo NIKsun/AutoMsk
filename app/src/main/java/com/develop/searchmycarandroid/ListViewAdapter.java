@@ -21,17 +21,20 @@ public class ListViewAdapter extends BaseAdapter{
     Context context;
     Cars cars;
     Bitmap[] images;
-    String lastCarDateAuto, lastCarDateAvito;
+    String lastCarDateAuto, lastCarDateAvito, lastCarIdDrom;
     Boolean isFromMonitor;
     InterstitialAd mInterstitialAd;
+    Integer counterIdDrom = 0, startDromPosition;
+    Boolean notBlockToWriteStartDromPosition = true;
 
 
     private static LayoutInflater inflater=null;
-    public ListViewAdapter(NotificationActivity mainActivity, Cars c, Bitmap[] imgs, String lastCarDateAuto, String lastCarDateAvito, InterstitialAd mAd) {
+    public ListViewAdapter(NotificationActivity mainActivity, Cars c, Bitmap[] imgs, String lastCarDateAuto, String lastCarDateAvito, String lastCarIdDrom, InterstitialAd mAd) {
         // TODO Auto-generated constructor stub
         context=mainActivity;
         this.lastCarDateAuto=lastCarDateAuto;
         this.lastCarDateAvito=lastCarDateAvito;
+        this.lastCarIdDrom = lastCarIdDrom;
         images = imgs;
         cars = c;
         isFromMonitor = true;
@@ -108,6 +111,21 @@ public class ListViewAdapter extends BaseAdapter{
                         }
                     }
                 }
+                else
+                {
+                    if(notBlockToWriteStartDromPosition)
+                    {
+                        startDromPosition=position;
+                        notBlockToWriteStartDromPosition=false;
+
+                        while (counterIdDrom < cars.getLength() && !lastCarIdDrom.equals(cars.cars[startDromPosition+counterIdDrom].id))
+                            counterIdDrom++;
+                    }
+                    if (lastCarIdDrom.equals("###") || position<startDromPosition+counterIdDrom)
+                        rowView.setBackgroundColor(0xFFC1E1FF);
+                    else {
+                    }
+                }
             }
             holder.tv = (TextView) rowView.findViewById(R.id.textView1);
             holder.img = (ImageView) rowView.findViewById(R.id.imageView1);
@@ -115,7 +133,7 @@ public class ListViewAdapter extends BaseAdapter{
             if(cars.getCarDate(position).getHours() == 0 && cars.getCarDate(position).getMinutes() == 0 && cars.getCarDate(position).getSeconds() == 0)
                 format = new SimpleDateFormat("dd.MM.yyyy");
             else
-                format = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+                format = new SimpleDateFormat("dd.MM.yyyy HH:mm");
             holder.tvt = (TextView) rowView.findViewById(R.id.textViewTime);
             holder.tvt.setText(format.format(cars.getCarDate(position)));
             holder.tv.setText(Html.fromHtml(cars.getMessage(position)));

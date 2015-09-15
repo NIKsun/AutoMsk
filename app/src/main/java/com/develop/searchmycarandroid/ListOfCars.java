@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.text.Html;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -45,7 +46,7 @@ import java.net.URL;
 public class ListOfCars extends Activity {
     Toast toastErrorConnection, toastErrorCarList;
     AlertDialog.Builder ad;
-    String requestAvito, requestAuto, lastCarDateAvito, lastCarDateAuto, shortMessage;
+    String requestAvito, requestAuto, lastCarDateAvito, lastCarDateAuto, lastCarIdDrom, shortMessage;
     Boolean isListDownloading, imageLoaderMayRunning;
     LoadListView loader = new LoadListView();
     Thread imageLoader = null;
@@ -126,7 +127,7 @@ public class ListOfCars extends Activity {
 
         AnalyticsApplication application = (AnalyticsApplication) getApplication();
         mTracker = application.getDefaultTracker();
-        mTracker.setScreenName("List of car");
+        mTracker.setScreenName("List of cars");
         mTracker.send(new HitBuilders.ScreenViewBuilder().build());
 
         mInterstitialAd.setAdUnitId(getString(R.string.banner_id));
@@ -174,14 +175,17 @@ public class ListOfCars extends Activity {
                     ed.putString("SearchMyCarService_LastCarDateAuto" + buttonNumber, "###");
                 else
                     ed.putString("SearchMyCarService_LastCarDateAuto" + buttonNumber, lastCarDateAuto);
+                if(lastCarIdDrom == null)
+                    ed.putString("SearchMyCarService_LastCarIdDrom" + buttonNumber, "###");
+                else
+                    ed.putString("SearchMyCarService_LastCarIdDrom" + buttonNumber, lastCarIdDrom);
+
                 ed.putInt("SearchMyCarService_period" + buttonNumber, 0);
                 String[] newStatus = sPref.getString("SearchMyCarService_status", "false;false;false").split(";");
                 newStatus[buttonNumber - 1] = "true";
                 ed.putString("SearchMyCarService_status", newStatus[0] + ";" + newStatus[1] + ";" + newStatus[2]);
                 ed.putString("SearchMyCarService_shortMessage" + buttonNumber, shortMessage);
                 ed.commit();
-
-                mTracker.send(new HitBuilders.EventBuilder().setCategory("List of Cars").setAction(shortMessage).build());
 
                 Intent serviceIntent = new Intent(getApplicationContext(), MonitoringWork.class);
                 serviceIntent.putExtra("SearchMyCarService_serviceID", buttonNumber);
@@ -272,32 +276,39 @@ public class ListOfCars extends Activity {
             Thread threadDrom = new Thread(new Runnable() {
                 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
                 public void run() {
-                    Document doc;
-                    try {
-                        doc = Jsoup.connect("http://auto.drom.ru/all/").userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
-                    }
-                    catch (HttpStatusException e)
-                    {
-                        bulDrom[0] = false;
-                        return;
-                    }
-                    catch (IOException e)
-                    {
-                        connectionDromSuccess[0] = false;
-                        return;
-                    }
-                    Elements mainElems = doc.select("body > div.main0 > div > div > table:nth-child(2) > tbody > tr > td:nth-child(1) > div > div:nth-child(2) > div:nth-child(9) > div.tab1 > table > tbody");
-                    if(mainElems != null) {
-                        mainElems = mainElems.first().children();
-                        carsDrom[0] = new Cars(mainElems.size());
-                        for (int i = 0; i < mainElems.size(); i++)
-                            if(mainElems.get(i).className().equals("row"))
-                                carsDrom[0].addFromDromRu(mainElems.get(i));
-                    }
-                    else
-                    {
-                        bulDrom[0] = false;
-                        return;
+                    int counter = 0;
+                    int pageCounter = 1;
+                    carsDrom[0] = new Cars(40);
+                    while(counter < 20) {
+                        Document doc;
+                        try {
+                            doc = Jsoup.connect("http://auto.drom.ru/all/page"+pageCounter).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
+                        } catch (HttpStatusException e) {
+                            bulDrom[0] = false;
+                            return;
+                        } catch (IOException e) {
+                            connectionDromSuccess[0] = false;
+                            return;
+                        }
+                        Elements mainElems = doc.select("body > div.main0 > div.main1 > div.main2 > table:nth-child(2) > tbody > tr > td:nth-child(1) > div.content > div:nth-child(2) > div:nth-child(8) > table > tbody");
+                        if(mainElems.isEmpty())
+                            mainElems = doc.select("body > div.main0 > div > div > table:nth-child(2) > tbody > tr > td:nth-child(1) > div > div:nth-child(2) > div:nth-child(9) > div.tab1 > table > tbody");
+
+                        if (!mainElems.isEmpty()) {
+                            mainElems = mainElems.first().children();
+                            for (int i = 0; i < mainElems.size(); i++)
+                                if (mainElems.get(i).className().equals("row"))
+                                    if(carsDrom[0].appendFromDromRu(mainElems.get(i)))
+                                        counter++;
+                        } else {
+                            if(counter == 0) {
+                                bulDrom[0] = false;
+                                return;
+                            }
+                            else
+                                break;
+                        }
+                        pageCounter++;
                     }
                 }
             });
@@ -417,6 +428,8 @@ public class ListOfCars extends Activity {
                 lastCarDateAuto = String.valueOf(carsAvto[0].getCarDateLong(0));
             if(!bulDrom[0] || !connectionDromSuccess[0])
                 carsDrom[0] = new Cars(0);
+            else
+                lastCarIdDrom = carsDrom[0].cars[0].id;
 
             Cars cars = Cars.merge(carsAvto[0], carsAvito[0], carsDrom[0]);
             if(cars.getLength() == 0)
