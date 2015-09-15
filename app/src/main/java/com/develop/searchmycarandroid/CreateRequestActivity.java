@@ -224,7 +224,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                 int endVolume = sPref.getInt("EndVolume",36);
                 String[] volume_arr_avto = new String[]{"0.0","0.6","0.7","0.8","0.9","1.0","1.1","1.2","1.3","1.4","1.5","1.6","1.7","1.8","1.9","2.0","2.1","2.2","2.3","2.4","2.5","2.6","2.7","2.8","2.9","3.0","3.1","3.2","3.3","3.4","3.5","4.0","4.5","5.0","5.5","6.0","10.0"};
                 String[] volume_arr_avito = new String[]{"15775", "15776", "15777", "15778", "15779", "15780", "15781", "15782", "15783", "15784", "15785", "15786", "15787", "15788", "15789", "15790", "15791", "15792", "15793", "15794", "15795", "15796", "15797", "15798", "15799", "15800", "15801", "15802", "15803", "15804", "15805", "15810", "15815", "15820", "15825", "15830", "15831"};
-                String[] volume_arr_drom = new String[]{"0.0","0.0","0.7","0.8","1.0","1.0","1.1","1.2","1.3","1.4","1.5","1.6","1.7","1.8","1.9","2.0","2.2","2.2","2.3","2.4","2.5","2.7","2.7","2.8","3.0","3.0","3.2","3.2","3.3","3.5","3.5","4.0","4.5","5.0","5.5","6.0","0.0"};
+                String[] volume_arr_drom = new String[]{"0.0","0.0","0.7","0.8","1.0","1.0","1.1","1.2","1.3","1.4","1.5","1.6","1.7","1.8","1.9","2.0","2.2","2.2","2.3","2.4","2.5","2.7","2.7","2.8","3.0","3.0","3.2","3.2","3.3","3.5","3.5","4.0","4.5","5.0","5.5","6.0",""};
 
 
                 //probeg is another (0-61)
@@ -246,7 +246,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
 
 
                 //trans unique drom ccka
-                String[] trans_arr_drom = {"&transmission=","&transmission=2","&transmission=1"}; //2 auto 1 man
+                String[] trans_arr_drom = {"","&transmission=2","&transmission=1"}; //2 auto 1 man
                 String trans_drom_req = "";
 
                 if(trans_str.length()==1){
@@ -285,7 +285,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                 String engine_avto_req = "";
 
                 //enginetype unique for drom
-                String[] engine_arr_drom = {"&fueltype=","&fueltype=1","&fueltype=2"}; // 1 - benz 2 - diz
+                String[] engine_arr_drom = {"","&fueltype=1","&fueltype=2"}; // 1 - benz 2 - diz
                 String engine_drom_req = "";
 
                 boolean drom_req_true = true;
@@ -335,7 +335,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                 String[] privod_arr_avto = {"","&search%5Bdrive%5D%5B180%5D=1","&search%5Bdrive%5D%5B181%5D=1","&search%5Bdrive%5D%5B7%5D=1"};
                 String privod_avto_req = "";
 
-                String[] privod_arr_drom = {"&privod=","&privod=1","&privod=2","&privod=3"}; //luboi per zad poln
+                String[] privod_arr_drom = {"","&privod=1","&privod=2","&privod=3"}; //luboi per zad poln
                 String privod_drom_req = "";
 
                 if(privod_str.length()==3){
