@@ -61,9 +61,10 @@ public class MonitoringWork extends Service {
         if(number == 0)
             return START_STICKY;
         if(status[number-1].equals("true")) {
-            String requestAuto = sPref.getString("SearchMyCarServiceRequestAuto" + number, "");
-            String requestAvito = sPref.getString("SearchMyCarServiceRequestAvito" + number, "");
-            Runnable st = new ServiceThread(number, requestAvito, requestAuto, "http://auto.drom.ru/all/page");
+            String requestAuto = sPref.getString("SearchMyCarServiceRequestAuto" + number, "###");
+            String requestAvito = sPref.getString("SearchMyCarServiceRequestAvito" + number, "###");
+            String requestDrom = sPref.getString("SearchMyCarServiceRequestDrom" + number, "###");
+            Runnable st = new ServiceThread(number, requestAvito, requestAuto, requestDrom);
             new Thread(st).start();
         }
         return START_STICKY;
@@ -159,7 +160,7 @@ public class MonitoringWork extends Service {
                         isConnectedDrom = true;
                         while(counterDromCars < 20) {
                             try {
-                                doc = Jsoup.connect("http://auto.drom.ru/all/page"+pageCounter).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
+                                doc = Jsoup.connect(requestDrom.replace("page@@@page", "page"+pageCounter)).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
                             } catch (Exception e) {
                                 isConnectedDrom = false;
                                 break;

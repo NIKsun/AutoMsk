@@ -353,7 +353,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
 
                 //constructor for drom
                 String begin_drom = "http://moscow.drom.ru/auto";
-                String end_drom = "?order_d=dsc";
+                String end_drom = "/all/page@@@page/?order_d=dsc";
                 String photodrom ="";
 
                 CheckBox is_photo = (CheckBox) this.findViewById(R.id.checkBox);

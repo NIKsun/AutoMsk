@@ -79,13 +79,14 @@ public class NotificationActivity extends Activity {
         super.onDestroy();
         monitorNumber = intent.getIntExtra("NotificationMessage", 0);
         SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
-        String requestAuto = sPref.getString("SearchMyCarServiceRequestAuto" + monitorNumber, "");
-        String requestAvito = sPref.getString("SearchMyCarServiceRequestAvito" + monitorNumber, "");
+        String requestAuto = sPref.getString("SearchMyCarServiceRequestAuto" + monitorNumber, "###");
+        String requestAvito = sPref.getString("SearchMyCarServiceRequestAvito" + monitorNumber, "###");
+        String requestDrom = sPref.getString("SearchMyCarServiceRequestDrom" + monitorNumber, "###");
         lastCarDateAuto = sPref.getString("SearchMyCarService_LastCarDateAuto" + monitorNumber, "###");
         lastCarDateAvito = sPref.getString("SearchMyCarService_LastCarDateAvito" + monitorNumber, "###");
         lastCarIdDrom = sPref.getString("SearchMyCarService_LastCarIdDrom" + monitorNumber, "###");
         loader = new LoadListViewMonitor();
-        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, requestAuto, requestAvito,"not###");
+        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, requestAuto, requestAvito, requestDrom);
         final TextView textView = (TextView) findViewById(R.id.textViewSeekBar );
         SeekBar seekBar = (SeekBar) findViewById(R.id.seekbar);
 
@@ -171,12 +172,13 @@ public class NotificationActivity extends Activity {
         monitorNumber = getIntent().getIntExtra("NotificationMessage", 0);
 
         SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
-        String requestAuto = sPref.getString("SearchMyCarServiceRequestAuto" + monitorNumber, "");
-        String requestAvito = sPref.getString("SearchMyCarServiceRequestAvito" + monitorNumber, "");
+        String requestAuto = sPref.getString("SearchMyCarServiceRequestAuto" + monitorNumber, "###");
+        String requestAvito = sPref.getString("SearchMyCarServiceRequestAvito" + monitorNumber, "###");
+        String requestDrom = sPref.getString("SearchMyCarServiceRequestDrom" + monitorNumber, "###");
         lastCarDateAuto = sPref.getString("SearchMyCarService_LastCarDateAuto" + monitorNumber, "###");
         lastCarDateAvito = sPref.getString("SearchMyCarService_LastCarDateAvito" + monitorNumber, "###");
         lastCarIdDrom = sPref.getString("SearchMyCarService_LastCarIdDrom" + monitorNumber, "###");
-        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, requestAuto, requestAvito, "not###");
+        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, requestAuto, requestAvito, requestDrom);
 
         final TextView textView = (TextView) findViewById(R.id.textViewSeekBar );
         SeekBar seekBar = (SeekBar) findViewById(R.id.seekbar);
@@ -268,7 +270,7 @@ public class NotificationActivity extends Activity {
                     while(counter < 20) {
                         Document doc;
                         try {
-                            doc = Jsoup.connect("http://auto.drom.ru/all/page"+pageCounter).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
+                            doc = Jsoup.connect(params[2].replace("page@@@page", "page"+pageCounter)).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
                         } catch (HttpStatusException e) {
                             bulDrom[0] = false;
                             return;
@@ -276,10 +278,12 @@ public class NotificationActivity extends Activity {
                             connectionDromSuccess[0] = false;
                             return;
                         }
+
                         Elements mainElems = doc.select("body > div.main0 > div.main1 > div.main2 > table:nth-child(2) > tbody > tr > td:nth-child(1) > div.content > div:nth-child(2) > div:nth-child(8) > table > tbody");
                         if(mainElems.isEmpty())
                             mainElems = doc.select("body > div.main0 > div > div > table:nth-child(2) > tbody > tr > td:nth-child(1) > div > div:nth-child(2) > div:nth-child(9) > div.tab1 > table > tbody");
-
+                        if(mainElems.isEmpty())
+                            mainElems = doc.select("body > div.main0 > div > div > table:nth-child(2) > tbody > tr > td:nth-child(1) > div > div:nth-child(2) > div:nth-child(8) > div.tab1 > table > tbody");
                         if (!mainElems.isEmpty()) {
                             mainElems = mainElems.first().children();
                             for (int i = 0; i < mainElems.size(); i++)

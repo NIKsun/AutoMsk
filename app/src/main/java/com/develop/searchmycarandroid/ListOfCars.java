@@ -46,7 +46,7 @@ import java.net.URL;
 public class ListOfCars extends Activity {
     Toast toastErrorConnection, toastErrorCarList;
     AlertDialog.Builder ad;
-    String requestAvito, requestAuto, lastCarDateAvito, lastCarDateAuto, lastCarIdDrom, shortMessage;
+    String requestAvito, requestAuto, requestDrom, lastCarDateAvito, lastCarDateAuto, lastCarIdDrom, shortMessage;
     Boolean isListDownloading, imageLoaderMayRunning;
     LoadListView loader = new LoadListView();
     Thread imageLoader = null;
@@ -142,6 +142,7 @@ public class ListOfCars extends Activity {
         SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
         requestAuto = sPref.getString("SearchMyCarRequest", "");
         requestAvito = sPref.getString("SearchMyCarRequestAvito", "");
+        requestDrom = sPref.getString("SearchMyCarRequestDrom", "");
         String mark = sPref.getString("marka_for_dialog", "###");
         String model = sPref.getString("model_for_dialog", "###");
         if(!mark.equals("###"))
@@ -153,7 +154,7 @@ public class ListOfCars extends Activity {
         else
             shortMessage = "###";
         isListDownloading = true;
-        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, requestAuto, requestAvito, "not ###");
+        loader.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, requestAuto, requestAvito, requestDrom);
     }
 
     int buttonNumber=0;
@@ -167,6 +168,7 @@ public class ListOfCars extends Activity {
                 SharedPreferences.Editor ed = sPref.edit();
                 ed.putString("SearchMyCarServiceRequestAuto" + buttonNumber, requestAuto);
                 ed.putString("SearchMyCarServiceRequestAvito" + buttonNumber, requestAvito);
+                ed.putString("SearchMyCarServiceRequestDrom" + buttonNumber, requestDrom);
                 if(lastCarDateAvito == null)
                     ed.putString("SearchMyCarService_LastCarDateAvito" + buttonNumber, "###");
                 else
@@ -282,7 +284,7 @@ public class ListOfCars extends Activity {
                     while(counter < 20) {
                         Document doc;
                         try {
-                            doc = Jsoup.connect("http://auto.drom.ru/all/page"+pageCounter).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
+                            doc = Jsoup.connect(params[2].replace("page@@@page", "page"+pageCounter)).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
                         } catch (HttpStatusException e) {
                             bulDrom[0] = false;
                             return;
@@ -290,10 +292,12 @@ public class ListOfCars extends Activity {
                             connectionDromSuccess[0] = false;
                             return;
                         }
+
                         Elements mainElems = doc.select("body > div.main0 > div.main1 > div.main2 > table:nth-child(2) > tbody > tr > td:nth-child(1) > div.content > div:nth-child(2) > div:nth-child(8) > table > tbody");
                         if(mainElems.isEmpty())
                             mainElems = doc.select("body > div.main0 > div > div > table:nth-child(2) > tbody > tr > td:nth-child(1) > div > div:nth-child(2) > div:nth-child(9) > div.tab1 > table > tbody");
-
+                        if(mainElems.isEmpty())
+                            mainElems = doc.select("body > div.main0 > div > div > table:nth-child(2) > tbody > tr > td:nth-child(1) > div > div:nth-child(2) > div:nth-child(8) > div.tab1 > table > tbody");
                         if (!mainElems.isEmpty()) {
                             mainElems = mainElems.first().children();
                             for (int i = 0; i < mainElems.size(); i++)
