@@ -366,9 +366,6 @@ public class ListOfCars extends Activity {
 
             publishProgress("Загрузка с Auto.ru");
 
-            Log.d("Drom", params[0]);
-            Log.d("Drom",params[1]);
-            Log.d("Drom", params[2]);
             Boolean bulAvto = true, connectionAutoSuccess = true;
             if(!params[0].equals("###")) {
                 Document doc = null;
@@ -412,8 +409,6 @@ public class ListOfCars extends Activity {
             else
                 bulAvto = false;
 
-
-            Log.d("Drom","now");
             if(!connectionAutoSuccess && !connectionAvitoSuccess[0] && !connectionDromSuccess[0]) {
                 toastErrorConnection.show();
                 return null;
