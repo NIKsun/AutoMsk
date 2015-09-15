@@ -366,11 +366,15 @@ public class ListOfCars extends Activity {
 
             publishProgress("Загрузка с Auto.ru");
 
+            Log.d("Drom", params[0]);
+            Log.d("Drom",params[1]);
+            Log.d("Drom", params[2]);
             Boolean bulAvto = true, connectionAutoSuccess = true;
             if(!params[0].equals("###")) {
                 Document doc = null;
                 try {
                     doc = Jsoup.connect(params[0]).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
+
                 }
                 catch (HttpStatusException e)
                 {
@@ -408,6 +412,8 @@ public class ListOfCars extends Activity {
             else
                 bulAvto = false;
 
+
+            Log.d("Drom","now");
             if(!connectionAutoSuccess && !connectionAvitoSuccess[0] && !connectionDromSuccess[0]) {
                 toastErrorConnection.show();
                 return null;

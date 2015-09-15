@@ -268,11 +268,19 @@
                  android:text="@string/dummy_button" android:onClick="onClick" />
 
             <Button android:id="@+id/buttonMon" style="?metaButtonBarButtonStyle"
-                android:layout_width="45dp"
+                android:layout_width="48dp"
                 android:layout_height="match_parent"
                 android:layout_gravity="right"
+                android:layout_marginRight="8dp"
                 android:onClick="onClickMonitor"
-                android:drawableStart="@drawable/abc"/>
+                android:drawableTop="@drawable/menu"/>
+            <Button android:id="@+id/buttonMon2" style="?metaButtonBarButtonStyle"
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="left"
+                android:layout_marginLeft="6dp"
+                android:onClick="onClickSettings"
+                android:drawableTop="@drawable/settings" />
 
 
 

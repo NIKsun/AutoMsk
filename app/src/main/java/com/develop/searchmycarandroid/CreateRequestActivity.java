@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -40,12 +41,16 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
     DBHelper dbHelper;
     Tracker mTracker;
     Boolean isUseSearchInAvito = null;
+    Boolean isUseSearchInDrom = null;
+    Boolean isUseSearchInAuto = null;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.create_req_menu, menu);
-        menu.findItem(R.id.cr_req_menu_check).setChecked(isUseSearchInAvito);
+        menu.findItem(R.id.cr_req_menu_Avito).setChecked(isUseSearchInAvito);
+        menu.findItem(R.id.cr_req_menu_Drom).setChecked(isUseSearchInDrom);
+        menu.findItem(R.id.cr_req_menu_Auto).setChecked(isUseSearchInAuto);
         return super.onCreateOptionsMenu(menu);
     }
     @Override
@@ -61,26 +66,32 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
             AlertDialog alert = builder.create();
             alert.show();
         }
-        else
+        else if(item.getTitle().equals("Искать на avito.ru"))
         {
             isUseSearchInAvito = !isUseSearchInAvito;
             SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
             sPref.edit().putBoolean("isUseSearchInAvito",isUseSearchInAvito).commit();
             item.setChecked(isUseSearchInAvito);
-            if(isUseSearchInAvito)
-                Toast.makeText(CreateRequestActivity.this,"Поиск на Авито включен",Toast.LENGTH_SHORT).show();
-            else {
-                Toast.makeText(CreateRequestActivity.this, "Поиск на Авито отключен", Toast.LENGTH_SHORT).show();
-                mTracker.send(new HitBuilders.EventBuilder().setCategory("Additional features").setAction("Avito search OFF").build());
-            }
-
+        }
+        else if(item.getTitle().equals("Искать на drom.ru"))
+        {
+            isUseSearchInDrom = !isUseSearchInDrom;
+            SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
+            sPref.edit().putBoolean("isUseSearchInDrom",isUseSearchInDrom).commit();
+            item.setChecked(isUseSearchInDrom);
+        }
+        else
+        {
+            isUseSearchInAuto = !isUseSearchInAuto;
+            SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
+            sPref.edit().putBoolean("isUseSearchInAuto",isUseSearchInAuto).commit();
+            item.setChecked(isUseSearchInAuto);
         }
         return super.onOptionsItemSelected(item);
     }
 
     @Override
     protected void onResume(){
-        super.onResume();
         super.onResume();
         SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
 
@@ -94,7 +105,8 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
             sPref.edit().putString("SearchMyCarService_status", "false;false;false").commit();
 
         isUseSearchInAvito = sPref.getBoolean("isUseSearchInAvito",true);
-
+        isUseSearchInDrom = sPref.getBoolean("isUseSearchInDrom",true);
+        isUseSearchInAuto = sPref.getBoolean("isUseSearchInAuto",true);
 
         Button b = (Button) findViewById(R.id.marka_button);
         Button b1 = (Button) findViewById(R.id.model_button);
@@ -143,6 +155,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
         }
 
     }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -404,12 +417,12 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                 String requestauto = "###";
                 String requestavito = "###";
                 String requestdrom = "###";
-                if(!(marka.equals("/###")) && !(model.equals("/###")))
+                if(!(marka.equals("/###")) && !(model.equals("/###")) && isUseSearchInAuto)
                     requestauto = begin + marka + model + end + year1 + startYear.toString() + year2 + endYear.toString() + price1 + price2+photo+eng_vol1+volume_arr_avto[startVolume]+eng_vol2+volume_arr_avto[endVolume]+probeg+body_avto_req+privod_avto_req+trans_avto_req+engine_avto_req;
                 if(!(markaavito.equals("/###")) && !(modelavito.equals("/###")) && isUseSearchInAvito)
                     requestavito = begin_avito+markaavito+modelavito+"/?"+photoa+price1a+startPrice+price2a+endPrice+"&f="+year1a+startYearAvito+year2a+endYearAvito+"."+eng_vol1a+volume_arr_avito[startVolume]+eng_vol2a+volume_arr_avito[endVolume]+"."+probega+body_avito_req+privod_avito_req+trans_avito_req+engine_avito_req;
 
-                if(!(markadrom.equals("/###")) && !(modeldrom.equals("/###")))
+                if(!(markadrom.equals("/###")) && !(modeldrom.equals("/###")) && isUseSearchInDrom)
                     requestdrom = begin_drom + markadrom + modeldrom + end_drom + photodrom;
 
                 ed.putString("SearchMyCarRequest", requestauto);
@@ -692,7 +705,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                 result += price_arr[i].substring(counter,counter+3)+" ";
                 counter+=3;
             }
-            price_arr[i] = result.substring(0,result.length()-1);
+            price_arr[i] = result.substring(0, result.length() - 1);
         }
         np1.setDisplayedValues(price_arr);
         np2.setDisplayedValues(price_arr);
@@ -1220,6 +1233,10 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                 break;
 
         }
+    }
+    public void onClickSettings(View v)
+    {
+        openOptionsMenu();
     }
     public void onClickMonitor(View v)
     {

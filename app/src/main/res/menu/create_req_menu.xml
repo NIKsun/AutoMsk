@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/cr_req_menu_check"
+    <item android:id="@+id/cr_req_menu_Auto"
         android:checkable="true"
-        android:title="Искать на Авито"/>
+        android:title="Искать на auto.ru"/>
+    <item android:id="@+id/cr_req_menu_Drom"
+    android:checkable="true"
+    android:title="Искать на drom.ru"/>
+    <item android:id="@+id/cr_req_menu_Avito"
+        android:checkable="true"
+        android:title="Искать на avito.ru"/>
     <item android:id="@+id/cr_req_menu_refer"
         android:title="Справка"
         />

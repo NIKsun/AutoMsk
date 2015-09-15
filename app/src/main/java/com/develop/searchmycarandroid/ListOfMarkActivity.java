@@ -30,7 +30,6 @@ public class ListOfMarkActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("size", "56789");
         setContentView(R.layout.activity_list_of_mark);
         TextView tvHeader = (TextView)findViewById(R.id.text_view_title);
 
