@@ -117,9 +117,11 @@ public class ListViewAdapter extends BaseAdapter{
                     {
                         startDromPosition=position;
                         notBlockToWriteStartDromPosition=false;
-
-                        while (counterIdDrom < cars.getLength() && !lastCarIdDrom.equals(cars.cars[startDromPosition+counterIdDrom].id))
+                        while (!lastCarIdDrom.equals(cars.cars[startDromPosition+counterIdDrom].id)) {
+                            if(cars.cars[startDromPosition+counterIdDrom].id.equals("separator"))
+                                break;
                             counterIdDrom++;
+                        }
                     }
                     if (lastCarIdDrom.equals("###") || position<startDromPosition+counterIdDrom)
                         rowView.setBackgroundColor(0xFFC1E1FF);
