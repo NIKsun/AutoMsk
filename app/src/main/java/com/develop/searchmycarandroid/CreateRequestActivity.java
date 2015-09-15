@@ -194,7 +194,6 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
 
     }
 
-    @Override
     public void onClick(View v) {
         //dbHelper = new DBHelper(this);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -208,8 +207,14 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                 SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
                 SharedPreferences.Editor ed = sPref.edit();
 
-                Integer startYear = sPref.getInt("StartYear",1970);
+                Integer startYear = sPref.getInt("StartYear", 1970);
+                String startYeard = "";
+                if(startYear != 1970)
+                    startYeard = String.valueOf(startYear);
                 Integer endYear = sPref.getInt("EndYear",2015);
+                String endYeard = "";
+                if(endYear != 2015)
+                    endYeard = String.valueOf(endYear);
 
                 Integer startPrice = sPref.getInt("StartPrice",0);
                 Integer endPrice = sPref.getInt("EndPrice",100000000);
@@ -219,6 +224,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                 int endVolume = sPref.getInt("EndVolume",36);
                 String[] volume_arr_avto = new String[]{"0.0","0.6","0.7","0.8","0.9","1.0","1.1","1.2","1.3","1.4","1.5","1.6","1.7","1.8","1.9","2.0","2.1","2.2","2.3","2.4","2.5","2.6","2.7","2.8","2.9","3.0","3.1","3.2","3.3","3.4","3.5","4.0","4.5","5.0","5.5","6.0","10.0"};
                 String[] volume_arr_avito = new String[]{"15775", "15776", "15777", "15778", "15779", "15780", "15781", "15782", "15783", "15784", "15785", "15786", "15787", "15788", "15789", "15790", "15791", "15792", "15793", "15794", "15795", "15796", "15797", "15798", "15799", "15800", "15801", "15802", "15803", "15804", "15805", "15810", "15815", "15820", "15825", "15830", "15831"};
+                String[] volume_arr_drom = new String[]{"0.0","0.0","0.7","0.8","1.0","1.0","1.1","1.2","1.3","1.4","1.5","1.6","1.7","1.8","1.9","2.0","2.2","2.2","2.3","2.4","2.5","2.7","2.7","2.8","3.0","3.0","3.2","3.2","3.3","3.5","3.5","4.0","4.5","5.0","5.5","6.0","0.0"};
 
 
                 //probeg is another (0-61)
@@ -237,12 +243,33 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
 
                 String[] trans_arr_avto = {"","&search%5Bgearbox%5D%5Bautomatic_auto%5D=1","&search%5Bgearbox%5D%5Bmanual_all%5D=1","&search%5Bgearbox%5D%5Bautomatic_robot%5D=1","&search%5Bgearbox%5D%5Bautomatic_variator%5D=1"};
                 String trans_avto_req = "";
+
+
+                //trans unique drom ccka
+                String[] trans_arr_drom = {"&transmission=","&transmission=2","&transmission=1"}; //2 auto 1 man
+                String trans_drom_req = "";
+
+                if(trans_str.length()==1){
+                    if(trans[1].equals("2"))
+                        trans_drom_req = trans_arr_drom[2];
+                    else
+                        trans_drom_req = trans_arr_drom[1];
+                }
+                else{
+                    if(trans[2].equals("2"))
+                        trans_drom_req = trans_arr_drom[0];
+                    else
+                        trans_drom_req = trans_arr_drom[1];
+                }
+
+
                 for(int i = 1; i < trans.length; ++i){
                     trans_avto_req+=trans_arr_avto[Integer.parseInt(trans[i])];
                     trans_avito_req+=trans_arr_avito[Integer.parseInt(trans[i])];
                 }
                 if(trans_str.equals("1234"))
                     trans_avto_req="";
+
 
 
                 //enginetype
@@ -256,6 +283,38 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
 
                 String[] engine_arr_avto = {"","&search%5Bengine_type%5D%5Bgasoline%5D=1","&search%5Bengine_type%5D%5B1260%5D=1","&search%5Bengine_type%5D%5B1256%5D=1","&search%5Bengine_type%5D%5B1262%5D=1","&search%5Bengine_type%5D%5B1257%5D=1"};
                 String engine_avto_req = "";
+
+                //enginetype unique for drom
+                String[] engine_arr_drom = {"&fueltype=","&fueltype=1","&fueltype=2"}; // 1 - benz 2 - diz
+                String engine_drom_req = "";
+
+                boolean drom_req_true = true;
+                if(engine_str.length()==1){
+                    if(engine[1].equals("1"))
+                        engine_drom_req = engine_arr_drom[1];
+                    else{
+                        if(engine[1].equals("2"))
+                            engine_drom_req = engine_arr_drom[2];
+                        else
+                            drom_req_true = false;
+                    }
+                }
+                else
+                if(engine[2].equals("2"))
+                    engine_drom_req = engine_arr_drom[0];
+                else {
+                    if(engine[1].equals("1"))
+                        engine_drom_req = engine_arr_drom[1];
+                    else{
+                        if(engine[1].equals("2"))
+                            engine_drom_req = engine_arr_drom[2];
+                        else
+                            drom_req_true = false;
+                    }
+                }
+
+
+
                 for(int i = 1; i < engine.length; ++i){
                     engine_avto_req+=engine_arr_avto[Integer.parseInt(engine[i])];
                     engine_avito_req +=engine_arr_avito[Integer.parseInt(engine[i])];
@@ -275,6 +334,18 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
 
                 String[] privod_arr_avto = {"","&search%5Bdrive%5D%5B180%5D=1","&search%5Bdrive%5D%5B181%5D=1","&search%5Bdrive%5D%5B7%5D=1"};
                 String privod_avto_req = "";
+
+                String[] privod_arr_drom = {"&privod=","&privod=1","&privod=2","&privod=3"}; //luboi per zad poln
+                String privod_drom_req = "";
+
+                if(privod_str.length()==3){
+                    privod_drom_req = privod_arr_drom[0];
+                }
+                else
+                    privod_drom_req = privod_arr_drom[Integer.parseInt(privod[1])];
+
+
+
                 for(int i = 1; i < privod.length; ++i){
                     privod_avto_req+=privod_arr_avto[Integer.parseInt(privod[i])];
                     privod_avito_req+=privod_arr_avito[Integer.parseInt(privod[i])];
@@ -294,17 +365,27 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
 
                 String[] body_arr_avto = {"","&search%5Bbody_type%5D%5Bg_sedan%5D=1","&search%5Bbody_type%5D%5Bg_hatchback%5D=1","&search%5Bbody_type%5D%5Bg_wagon%5D=1","&search%5Bbody_type%5D%5Bg_offroad%5D=1","&search%5Bbody_type%5D%5Bg_minivan%5D=1","&search%5Bbody_type%5D%5Bg_limousine%5D=1","&search%5Bbody_type%5D%5Bg_coupe%5D=1","&search%5Bbody_type%5D%5Bg_cabrio%5D=1","&search%5Bbody_type%5D%5Bg_furgon%5D=1","&search%5Bbody_type%5D%5Bg_pickup%5D=1"};
                 String body_avto_req = "";
+
+                String[] body_arr_drom = {"","&frametype10=10","&frametype5=5","&frametype3=3","&frametype7=7",
+                        "&frametype6=6","","&frametype1=1","&frametype11=11",
+                        "","&frametype12=12"};
+                String body_drom_req = "";
+
                 for(int i = 1; i < body.length; ++i){
                     if(Integer.parseInt(body[i])==0){
-                        body_avto_req+= body_arr_avto[10];
-                        body_avito_req+=body_arr_avito[10];
+                        body_avto_req += body_arr_avto[10];
+                        body_avito_req += body_arr_avito[10];
+                        body_drom_req += body_arr_drom[10];
                         continue;
                     }
                     body_avto_req+=body_arr_avto[Integer.parseInt(body[i])];
                     body_avito_req+=body_arr_avito[Integer.parseInt(body[i])];
+                    body_drom_req+=body_arr_drom[Integer.parseInt(body[i])];
                 }
-                if(body_str.equals("1234567890"))
-                    body_avto_req="";
+                if(body_str.equals("1234567890")) {
+                    body_avto_req = "";
+                    body_drom_req = "";
+                }
 
 
                 //constructor for auto.ru
@@ -368,7 +449,15 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                 String begin_drom = "http://moscow.drom.ru/auto";
                 String end_drom = "/all/page@@@page/?order_d=dsc";
                 String photodrom ="";
+                String price1drom = "&minprice=";
+                String price2drom = "&maxprice=";
+                String year1drom = "&minyear=";
+                String year2drom = "&maxyear=";
+                String eng_vol1drom = "&mv=";
+                String eng_vol2drom = "&xv=";
 
+
+                //photo
                 CheckBox is_photo = (CheckBox) this.findViewById(R.id.checkBox);
                 if(is_photo.isChecked()){
                     photo ="&search%5Bphoto%5D%5B1%5D=1";
@@ -413,17 +502,20 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                 sPref.edit().putString("marka_for_dialog",marka_for_dialog).commit();
                 sPref.edit().putString("model_for_dialog",model_for_dialog).commit();
 
-                //put two request
+                //put two plus one request
                 String requestauto = "###";
                 String requestavito = "###";
                 String requestdrom = "###";
-                if(!(marka.equals("/###")) && !(model.equals("/###")) && isUseSearchInAuto)
+                if(!(marka.equals("/###")) && !(model.equals("/###"))&& isUseSearchInAuto)
                     requestauto = begin + marka + model + end + year1 + startYear.toString() + year2 + endYear.toString() + price1 + price2+photo+eng_vol1+volume_arr_avto[startVolume]+eng_vol2+volume_arr_avto[endVolume]+probeg+body_avto_req+privod_avto_req+trans_avto_req+engine_avto_req;
                 if(!(markaavito.equals("/###")) && !(modelavito.equals("/###")) && isUseSearchInAvito)
                     requestavito = begin_avito+markaavito+modelavito+"/?"+photoa+price1a+startPrice+price2a+endPrice+"&f="+year1a+startYearAvito+year2a+endYearAvito+"."+eng_vol1a+volume_arr_avito[startVolume]+eng_vol2a+volume_arr_avito[endVolume]+"."+probega+body_avito_req+privod_avito_req+trans_avito_req+engine_avito_req;
 
-                if(!(markadrom.equals("/###")) && !(modeldrom.equals("/###")) && isUseSearchInDrom)
-                    requestdrom = begin_drom + markadrom + modeldrom + end_drom + photodrom;
+                if(!(markadrom.equals("/###")) && !(modeldrom.equals("/###") && isUseSearchInDrom) && drom_req_true!=false)
+                    requestdrom = begin_drom + markadrom + modeldrom + end_drom + photodrom + price1drom + startPrice + price2drom
+                            + endPrice + year1drom + startYeard + year2drom+ endYeard
+                            + eng_vol1drom + volume_arr_drom[startVolume] + eng_vol2drom + volume_arr_drom[endVolume] + trans_drom_req
+                            + engine_drom_req + privod_drom_req + body_drom_req + "&go_search=2";
 
                 ed.putString("SearchMyCarRequest", requestauto);
                 ed.putString("SearchMyCarRequestAvito", requestavito);
@@ -681,19 +773,19 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
 
         final String[] price_arr = new String[count_price];
         for(int i=0; i<price_arr.length; ++i){
-           if(i<51){
-               price_arr[i]= String.valueOf(i*10000);
-           }
-           else
-               if(i<76){
-                    price_arr[i]= String.valueOf(Integer.parseInt(price_arr[i-1].replace(" ",""))+20000);
-               }
-               else
-                   if(i<96) {
-                        price_arr[i] = String.valueOf(Integer.parseInt(price_arr[i - 1].replace(" ","")) + 50000);
-                   }
-                   else
-                        price_arr[i] = String.valueOf(Integer.parseInt(price_arr[i - 1].replace(" ","")) + 100000);
+            if(i<51){
+                price_arr[i]= String.valueOf(i*10000);
+            }
+            else
+            if(i<76){
+                price_arr[i]= String.valueOf(Integer.parseInt(price_arr[i-1].replace(" ",""))+20000);
+            }
+            else
+            if(i<96) {
+                price_arr[i] = String.valueOf(Integer.parseInt(price_arr[i - 1].replace(" ","")) + 50000);
+            }
+            else
+                price_arr[i] = String.valueOf(Integer.parseInt(price_arr[i - 1].replace(" ","")) + 100000);
 
             int len = price_arr[i].length(), counter;
             String result = "";
@@ -705,7 +797,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                 result += price_arr[i].substring(counter,counter+3)+" ";
                 counter+=3;
             }
-            price_arr[i] = result.substring(0, result.length() - 1);
+            price_arr[i] = result.substring(0,result.length()-1);
         }
         np1.setDisplayedValues(price_arr);
         np2.setDisplayedValues(price_arr);

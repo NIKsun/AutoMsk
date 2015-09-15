@@ -158,7 +158,7 @@ public class MonitoringWork extends Service {
                     {
                         Integer counterDromCars = 0, pageCounter = 1;
                         isConnectedDrom = true;
-                        while(counterDromCars < 20) {
+                        mainLoop:while(counterDromCars < 20) {
                             try {
                                 doc = Jsoup.connect(requestDrom.replace("page@@@page", "page"+pageCounter)).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
                             } catch (Exception e) {
@@ -183,6 +183,8 @@ public class MonitoringWork extends Service {
                                                 counterDromCars++;
                                                 if(!id.equals(lastCarIdDrom))
                                                     counter[0][0]++;
+                                                else
+                                                    break mainLoop;
                                             }
                                         }
                                 }
