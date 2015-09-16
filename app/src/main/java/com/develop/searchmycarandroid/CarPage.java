@@ -38,6 +38,10 @@ public class CarPage extends Activity{
         mWebView.getSettings().setSupportZoom(true);
         mWebView.getSettings().setDisplayZoomControls(true);
 
+        mWebView.setInitialScale(50);
+        mWebView.getSettings().setDefaultZoom(WebSettings.ZoomDensity.FAR);
+        mWebView.getSettings().setUseWideViewPort(true);
+
         mWebView.clearCache(true);
 
         class MyWebViewClient extends WebViewClient {
