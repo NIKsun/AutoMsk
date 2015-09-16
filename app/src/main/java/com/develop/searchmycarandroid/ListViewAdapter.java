@@ -121,12 +121,12 @@ public class ListViewAdapter extends BaseAdapter{
                             if(cars.cars[startDromPosition+counterIdDrom].id.equals("separator"))
                                 break;
                             counterIdDrom++;
+                            if(startDromPosition+counterIdDrom == cars.getLength())
+                                break;
                         }
                     }
                     if (lastCarIdDrom.equals("###") || position<startDromPosition+counterIdDrom)
                         rowView.setBackgroundColor(0xFFC1E1FF);
-                    else {
-                    }
                 }
             }
             holder.tv = (TextView) rowView.findViewById(R.id.textView1);

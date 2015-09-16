@@ -59,7 +59,7 @@ public class MonitoringWork extends Service {
         String[] status = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE).getString("SearchMyCarService_status", "false;false;false").split(";");
         int number = intent.getIntExtra("SearchMyCarService_serviceID",0);
         if(number == 0)
-            return START_STICKY;
+            return START_NOT_STICKY;
         if(status[number-1].equals("true")) {
             String requestAuto = sPref.getString("SearchMyCarServiceRequestAuto" + number, "###");
             String requestAvito = sPref.getString("SearchMyCarServiceRequestAvito" + number, "###");
@@ -67,7 +67,7 @@ public class MonitoringWork extends Service {
             Runnable st = new ServiceThread(number, requestAvito, requestAuto, requestDrom);
             new Thread(st).start();
         }
-        return START_STICKY;
+        return START_NOT_STICKY;
     }
 
     public void onDestroy() {
@@ -205,7 +205,7 @@ public class MonitoringWork extends Service {
         if(counter[0][0] != 0) {
             sendNotification(counter[0][0], serviceID);
         }
-
+        stopSelf();
     }
 
     void sendNotification(int countOfNewCars, int serviceID) {

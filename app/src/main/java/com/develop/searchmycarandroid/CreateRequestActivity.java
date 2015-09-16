@@ -57,7 +57,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
     public boolean onOptionsItemSelected(MenuItem item) {
         AlertDialog.Builder builder = new AlertDialog.Builder(CreateRequestActivity.this);
         if(item.getTitle().equals("Справка")) {
-            builder.setTitle("Справка").setMessage("Приложние создано для того, чтобы облегчить утомительный процесс поиска Вашего будущего автомобиля. Для этого в нем имеются мониторы, которые будут вести поиск по указанным параметрам на ведущих автомобильных порталах России.\nВы используете первую версию приложения, однако Ваши отзывы и предложения помогут нам сделать его лучше и эффективнее.\nУдачных покупок!").setCancelable(true).setNegativeButton("Отмена",
+            builder.setTitle("Справка").setMessage("Приложние создано для того, чтобы облегчить утомительный процесс поиска Вашего будущего автомобиля. Для этого в нем имеются мониторы, которые будут вести поиск по указанным параметрам на ведущих автомобильных порталах России.\nВы используете первую версию приложения, однако Ваши отзывы и предложения помогут нам сделать его лучше и эффективнее.\nУдачных покупок!").setCancelable(true).setNegativeButton("Назад",
                     new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int id) {
                             dialog.cancel();
@@ -202,6 +202,10 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
 
         switch (v.getId()) {
             case R.id.buttonSearch:
+                if(!isUseSearchInAuto && !isUseSearchInDrom && !isUseSearchInAvito) {
+                    Toast.makeText(this, "Вы не указали сайт для поиска в настройках", Toast.LENGTH_LONG).show();
+                    break;
+                }
 
                 Intent intent = new Intent(this, ListOfCars.class);
                 SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
@@ -511,7 +515,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                 if(!(markaavito.equals("/###")) && !(modelavito.equals("/###")) && isUseSearchInAvito)
                     requestavito = begin_avito+markaavito+modelavito+"/?"+photoa+price1a+startPrice+price2a+endPrice+"&f="+year1a+startYearAvito+year2a+endYearAvito+"."+eng_vol1a+volume_arr_avito[startVolume]+eng_vol2a+volume_arr_avito[endVolume]+"."+probega+body_avito_req+privod_avito_req+trans_avito_req+engine_avito_req;
 
-                if(!(markadrom.equals("/###")) && !(modeldrom.equals("/###") && isUseSearchInDrom) && drom_req_true!=false)
+                if(!(markadrom.equals("/###")) && !(modeldrom.equals("/###")) && drom_req_true!=false && isUseSearchInDrom)
                     requestdrom = begin_drom + markadrom + modeldrom + end_drom + photodrom + price1drom + startPrice + price2drom
                             + endPrice + year1drom + startYeard + year2drom+ endYeard
                             + eng_vol1drom + volume_arr_drom[startVolume] + eng_vol2drom + volume_arr_drom[endVolume] + trans_drom_req
@@ -1397,7 +1401,6 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
         butMonTitle1.setOnClickListener(monitorClick);
         butMonTitle2.setOnClickListener(monitorClick);
         butMonTitle3.setOnClickListener(monitorClick);
-
 
         dialog.show();
     }

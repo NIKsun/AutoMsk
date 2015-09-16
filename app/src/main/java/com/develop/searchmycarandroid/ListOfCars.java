@@ -66,7 +66,7 @@ public class ListOfCars extends Activity {
         builder.setTitle("Справка").setMessage("На текущем экране отображены последние оставленные " +
                 "объявления на порталах Avito.ru и Auto.ru по введенным Вами характеристикам." +
                 " Для того, чтобы начать мониторинг текущего списка нажмите на любой свободный монитор.")
-                .setCancelable(true).setNegativeButton("Отмена",
+                .setCancelable(true).setNegativeButton("Назад",
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.cancel();

@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -61,7 +62,7 @@ public class NotificationActivity extends Activity {
         AlertDialog.Builder builder = new AlertDialog.Builder(NotificationActivity.this);
         builder.setTitle("Справка").setMessage("Для изменения периода мониторинга текущего списка сдвиньте" +
                 " ползунок периода в нужное положение." +
-                " Слишком частый мониторинг может привести к быстой разрядке аккумулятора").setCancelable(true).setNegativeButton("Отмена",
+                " Слишком частый мониторинг может привести к быстой разрядке аккумулятора").setCancelable(true).setNegativeButton("Назад",
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
                         dialog.cancel();
