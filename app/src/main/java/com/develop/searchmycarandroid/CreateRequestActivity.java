@@ -1,5 +1,6 @@
 package com.develop.searchmycarandroid;
 
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -9,10 +10,14 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
 import android.text.TextUtils;
@@ -32,6 +37,14 @@ import android.widget.Toast;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 
+
+import org.jsoup.HttpStatusException;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +56,9 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
     Boolean isUseSearchInAvito = null;
     Boolean isUseSearchInDrom = null;
     Boolean isUseSearchInAuto = null;
+    final String SAVED_TEXT_WITH_VERSION = "checkVersion";
+    final String DO_NOT_REMIND = "DontRemind";
+    static Dialog dialogPicker ;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -162,6 +178,150 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_create_request);
         dbHelper = new DBHelper(this);
+
+        Thread threadAvito = new Thread(new Runnable() {
+            @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+            public void run() {
+                Document doc;
+                SharedPreferences sPref;
+                try {
+                    doc = Jsoup.connect("https://play.google.com/store/apps/details?id=com.develop.searchmycarandroid").userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
+
+                    PackageManager packageManager;
+                    PackageInfo packageInfo;
+                    packageManager=getPackageManager();
+
+                    packageInfo = packageManager.getPackageInfo(getPackageName(), 0);
+                    Element mainElems = doc.select("#body-content > div > div > div.main-content > div.details-wrapper.apps-secondary-color > div > div.details-section-contents > div:nth-child(4) > div.content").first();
+
+                    if (!packageInfo.versionName.equals(mainElems.text()))
+                    {
+                        sPref = getPreferences(MODE_PRIVATE);
+                        SharedPreferences.Editor ed = sPref.edit();
+                        ed.putBoolean(SAVED_TEXT_WITH_VERSION, false);
+                        ed.commit();
+                    }
+                    else
+                    {
+                        sPref = getPreferences(MODE_PRIVATE);
+                        SharedPreferences.Editor ed = sPref.edit();
+                        ed.putBoolean(SAVED_TEXT_WITH_VERSION, true);
+                        ed.commit();
+
+                    }
+                    //SharedPreferences sPrefRemind;
+                    //sPrefRemind = getPreferences(MODE_PRIVATE);
+                    //sPrefRemind.edit().putBoolean(DO_NOT_REMIND, false).commit();
+                }
+                catch (HttpStatusException e)
+                {
+                    //bulAvito[0] =false;
+                    return;
+                }
+                catch (IOException e)
+                {
+                    //connectionAvitoSuccess[0] = false;
+                    return;
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        });
+
+
+        SharedPreferences sPrefVersion;
+        sPrefVersion = getPreferences(MODE_PRIVATE);
+        Boolean isNewVersion;
+        isNewVersion = sPrefVersion.getBoolean(SAVED_TEXT_WITH_VERSION, true);
+        threadAvito.start();
+        boolean remind=true;
+        if (!isNewVersion)
+        {
+
+            Log.d("aaffa", "isNewVersion= "+isNewVersion);
+            Log.d("aaffa", "не новая версия!!! Так записано. Возможно, поток еще не отработал");
+            SharedPreferences sPref12;
+            sPref12 = getPreferences(MODE_PRIVATE);
+            String isNewVersion12;
+
+            PackageManager packageManager;
+            PackageInfo packageInfo;
+            packageManager=getPackageManager();
+
+            try {
+                packageInfo=packageManager.getPackageInfo(getPackageName(), 0);
+                isNewVersion12 = sPref12.getString("OldVersionName", packageInfo.versionName);
+
+                if (!isNewVersion12.equals(packageInfo.versionName))
+                {
+                    Log.d("aaffa", "записанная в shared запись версии НЕ совпадает с действительной=" + isNewVersion12);
+
+                    SharedPreferences sPref;
+                    sPref = getPreferences(MODE_PRIVATE);
+                    SharedPreferences.Editor ed = sPref.edit();
+                    ed.putBoolean(SAVED_TEXT_WITH_VERSION, false);
+                    ed.commit();
+
+                    SharedPreferences sPrefRemind;
+                    sPrefRemind = getPreferences(MODE_PRIVATE);
+                    sPrefRemind.edit().putBoolean(DO_NOT_REMIND, false).commit();
+                }
+                else
+                {
+                    remind = false;
+                    Log.d("aaffa", "записанная в shared запись версии  совпадает с действительной");
+                }
+
+
+                SharedPreferences sPrefRemind;
+                sPrefRemind = getPreferences(MODE_PRIVATE);
+                sPrefRemind.edit().putString("OldVersionName", packageInfo.versionName).commit();
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            SharedPreferences sPrefRemind;
+            sPrefRemind = getPreferences(MODE_PRIVATE);
+            Boolean dontRemind;
+            dontRemind = sPrefRemind.getBoolean(DO_NOT_REMIND, false);
+            Log.d("aaffa", "dontRemind= "+dontRemind.toString());
+            Log.d("aaffa", "remind= "+remind);
+
+            if ((!dontRemind) && (!remind)) {
+
+                AlertDialog.Builder ad;
+                ad = new AlertDialog.Builder(CreateRequestActivity.this);
+                ad.setTitle("Обновление.");
+                ad.setMessage("Вы хотите обновить приложение?");
+                ad.setPositiveButton("Обновить", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int arg1) {
+
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.develop.searchmycarandroid"));
+                        startActivity(intent);
+                    }
+                });
+                ad.setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int arg1) {
+                    }
+                });
+                ad.setNeutralButton("Не напоминать", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int arg1) {
+                        SharedPreferences sPrefRemind;
+                        sPrefRemind = getPreferences(MODE_PRIVATE);
+                        sPrefRemind.edit().putBoolean(DO_NOT_REMIND, true).commit();
+                    }
+                });
+                ad.setCancelable(true);
+                ad.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    public void onCancel(DialogInterface dialog) {
+                    }
+                });
+
+                ad.show();
+            }
+        }
+
 
         AnalyticsApplication application = (AnalyticsApplication) getApplication();
         mTracker = application.getDefaultTracker();
