@@ -280,13 +280,19 @@ public class NotificationActivity extends Activity {
                             return;
                         }
 
-                        Elements mainElems = doc.select("body > div.main0 > div.main1 > div.main2 > table:nth-child(2) > tbody > tr > td:nth-child(1) > div.content > div:nth-child(2) > div:nth-child(8) > table > tbody");
-                        if(mainElems.isEmpty())
-                            mainElems = doc.select("body > div.main0 > div > div > table:nth-child(2) > tbody > tr > td:nth-child(1) > div > div:nth-child(2) > div:nth-child(9) > div.tab1 > table > tbody");
-                        if(mainElems.isEmpty())
-                            mainElems = doc.select("body > div.main0 > div > div > table:nth-child(2) > tbody > tr > td:nth-child(1) > div > div:nth-child(2) > div:nth-child(8) > div.tab1 > table > tbody");
+                        Elements mainElems = doc.select("body > div.main0 > div.main1 > div.main2 > table:nth-child(2) > tbody > tr > td:nth-child(1) > div.content > div:nth-child(2)");
+                        if(!mainElems.isEmpty())
+                            mainElems = mainElems.select("table.newCatList.visitedT");
+                        else {
+                            if (counter == 0) {
+                                bulDrom[0] = false;
+                                return;
+                            } else
+                                break;
+                        }
+
                         if (!mainElems.isEmpty()) {
-                            mainElems = mainElems.first().children();
+                            mainElems = mainElems.select("tbody").first().children();
                             for (int i = 0; i < mainElems.size(); i++)
                                 if (mainElems.get(i).className().equals("row"))
                                     if(carsDrom[0].appendFromDromRu(mainElems.get(i)))

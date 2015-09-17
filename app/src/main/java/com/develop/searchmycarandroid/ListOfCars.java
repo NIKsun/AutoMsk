@@ -280,7 +280,7 @@ public class ListOfCars extends Activity {
                 public void run() {
                     int counter = 0;
                     int pageCounter = 1;
-                    carsDrom[0] = new Cars(40);
+                    carsDrom[0] = new Cars(50);
                     while(counter < 20) {
                         Document doc;
                         Log.d("Drom",params[2].replace("page@@@page", "page"+pageCounter));
@@ -294,17 +294,24 @@ public class ListOfCars extends Activity {
                             return;
                         }
 
-                        Elements mainElems = doc.select("body > div.main0 > div.main1 > div.main2 > table:nth-child(2) > tbody > tr > td:nth-child(1) > div.content > div:nth-child(2) > div:nth-child(8) > table > tbody");
-                        if(mainElems.isEmpty())
-                            mainElems = doc.select("body > div.main0 > div > div > table:nth-child(2) > tbody > tr > td:nth-child(1) > div > div:nth-child(2) > div:nth-child(9) > div.tab1 > table > tbody");
-                        if(mainElems.isEmpty())
-                            mainElems = doc.select("body > div.main0 > div > div > table:nth-child(2) > tbody > tr > td:nth-child(1) > div > div:nth-child(2) > div:nth-child(8) > div.tab1 > table > tbody");
+                        Elements mainElems = doc.select("body > div.main0 > div.main1 > div.main2 > table:nth-child(2) > tbody > tr > td:nth-child(1) > div.content > div:nth-child(2)");
+                        if(!mainElems.isEmpty())
+                            mainElems = mainElems.select("table.newCatList.visitedT");
+                        else {
+                            if (counter == 0) {
+                                bulDrom[0] = false;
+                                return;
+                            } else
+                                break;
+                        }
+
                         if (!mainElems.isEmpty()) {
-                            mainElems = mainElems.first().children();
-                            for (int i = 0; i < mainElems.size(); i++)
+                            mainElems = mainElems.select("tbody").first().children();
+                            for (int i = 0; i < mainElems.size(); i++) {
                                 if (mainElems.get(i).className().equals("row"))
-                                    if(carsDrom[0].appendFromDromRu(mainElems.get(i)))
+                                    if (carsDrom[0].appendFromDromRu(mainElems.get(i)))
                                         counter++;
+                            }
                         } else {
                             if(counter == 0) {
                                 bulDrom[0] = false;
@@ -314,6 +321,11 @@ public class ListOfCars extends Activity {
                                 break;
                         }
                         pageCounter++;
+                        if(pageCounter > 5)
+                        {
+                            bulDrom[0] = false;
+                            return;
+                        }
                     }
                 }
             });
