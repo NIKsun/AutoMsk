@@ -283,7 +283,6 @@ public class ListOfCars extends Activity {
                     carsDrom[0] = new Cars(50);
                     while(counter < 20) {
                         Document doc;
-                        Log.d("Drom",params[2].replace("page@@@page", "page"+pageCounter));
                         try {
                             doc = Jsoup.connect(params[2].replace("page@@@page", "page"+pageCounter)).userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; ru-RU; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6").timeout(12000).get();
                         } catch (HttpStatusException e) {

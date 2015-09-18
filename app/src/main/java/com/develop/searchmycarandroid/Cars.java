@@ -400,11 +400,17 @@ public class Cars {
 
     public String getHref(int pos)
     {
-        return cars[pos].href;
+        if(cars[pos].href.substring(0,4).equals("http"))
+            return cars[pos].href;
+        else
+            return "http://"+cars[pos].href;
     }
     public String getImg(int pos)
     {
-        return cars[pos].img;
+        if(cars[pos].img.substring(0,4).equals("http"))
+            return cars[pos].img;
+        else
+            return "http:"+cars[pos].img;
     }
     public int getLength()
     {
