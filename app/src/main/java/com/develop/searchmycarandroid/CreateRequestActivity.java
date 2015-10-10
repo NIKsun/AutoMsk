@@ -34,6 +34,7 @@ import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.analytics.HitBuilders;
 import com.google.android.gms.analytics.Tracker;
 
@@ -58,7 +59,9 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
     Boolean isUseSearchInAuto = null;
     Boolean notificationIsActive = null;
     final String SAVED_TEXT_WITH_VERSION = "checkVersion";
+    final String NEW_VERSION_MATERIAL = "MaterialVersion";
     final String DO_NOT_REMIND = "DontRemind";
+    String MaterialHttp;
     static Dialog dialogPicker ;
 
     @Override
@@ -204,6 +207,29 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                     packageInfo = packageManager.getPackageInfo(getPackageName(), 0);
                     Element mainElems = doc.select("#body-content > div > div > div.main-content > div.details-wrapper.apps-secondary-color > div > div.details-section-contents > div:nth-child(4) > div.content").first();
 
+                    Element mainElems2 = doc.select("#body-content > div > div > div.main-content > div:nth-child(1) > div > div.details-section.description.simple.contains-text-link.apps-secondary-color > div.details-section-contents.show-more-container.more > div.show-more-content.text-body").first();
+
+
+                    if (mainElems2.text().contains("Авто Русь") || (mainElems2.text().contains("АвтоРусь")))
+                    {
+                        sPref = getPreferences(MODE_PRIVATE);
+                        SharedPreferences.Editor ed = sPref.edit();
+                        ed.putBoolean(NEW_VERSION_MATERIAL, true);
+                        ed.commit();
+                        MaterialHttp = mainElems2.text().substring(mainElems2.text().indexOf("http"));
+                        MaterialHttp = MaterialHttp.substring(0, MaterialHttp.indexOf(" "));
+
+                        //mainElems2.text().substring()
+
+                    }
+                    else
+                    {
+                        sPref = getPreferences(MODE_PRIVATE);
+                        SharedPreferences.Editor ed = sPref.edit();
+                        ed.putBoolean(NEW_VERSION_MATERIAL, false);
+                        ed.commit();
+
+                    }
                     if (!packageInfo.versionName.equals(mainElems.text()))
                     {
                         sPref = getPreferences(MODE_PRIVATE);
@@ -245,6 +271,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
         Boolean isNewVersion;
         isNewVersion = sPrefVersion.getBoolean(SAVED_TEXT_WITH_VERSION, true);
         threadAvito.start();
+
         boolean remind=true;
         if (!isNewVersion)
         {
@@ -293,47 +320,92 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
 
             SharedPreferences sPrefRemind;
             sPrefRemind = getPreferences(MODE_PRIVATE);
-            Boolean dontRemind;
-            dontRemind = sPrefRemind.getBoolean(DO_NOT_REMIND, false);
-            Log.d("aaffa", "dontRemind= "+dontRemind.toString());
-            Log.d("aaffa", "remind= "+remind);
+            Boolean newVersionMaterial;
+            newVersionMaterial = sPrefRemind.getBoolean(NEW_VERSION_MATERIAL, false);
 
-            if ((!dontRemind) && (!remind)) {
+            if (newVersionMaterial) {
+                int adMobCounter = sPrefRemind.getInt("NewVersionCounter",1);
+                if(adMobCounter == 3) {
+                    sPrefRemind.edit().putInt("NewVersionCounter",1).commit();
 
-                AlertDialog.Builder ad;
-                ad = new AlertDialog.Builder(CreateRequestActivity.this);
-                ad.setTitle("Обновление.");
-                ad.setMessage("Вы хотите обновить приложение?");
-                ad.setPositiveButton("Обновить", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int arg1) {
+                    AlertDialog.Builder ad;
+                    ad = new AlertDialog.Builder(CreateRequestActivity.this);
+                    ad.setTitle("Новая версия.");
+                    ad.setMessage("Скачайте новую версию приложения: Авто Русь!");
 
-                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.develop.searchmycarandroid"));
-                        startActivity(intent);
-                    }
-                });
-                ad.setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int arg1) {
-                    }
-                });
-                ad.setNeutralButton("Не напоминать", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int arg1) {
-                        SharedPreferences sPrefRemind;
-                        sPrefRemind = getPreferences(MODE_PRIVATE);
-                        sPrefRemind.edit().putBoolean(DO_NOT_REMIND, true).commit();
-                    }
-                });
-                ad.setCancelable(true);
-                ad.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                    public void onCancel(DialogInterface dialog) {
-                    }
-                });
+                    ad.setPositiveButton("Скачать приложение", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int arg1) {
 
-                ad.show();
+                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(MaterialHttp));
+                            startActivity(intent);
+                        }
+                    });
+                    ad.setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int arg1) {
+                        }
+                    });
+                    ad.setNeutralButton("Не напоминать", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int arg1) {
+                            SharedPreferences sPrefRemind;
+                            sPrefRemind = getPreferences(MODE_PRIVATE);
+                            sPrefRemind.edit().putBoolean(DO_NOT_REMIND, true).commit();
+                        }
+                    });
+                    ad.setCancelable(true);
+                    ad.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                        public void onCancel(DialogInterface dialog) {
+                        }
+                    });
+
+                    ad.show();
+                }
+                else
+                    sPrefRemind.edit().putInt("AdMobCounter",adMobCounter+1).commit();
+
             }
         }
 
+        SharedPreferences sPrefRemind;
+        sPrefRemind = getPreferences(MODE_PRIVATE);
+        Boolean dontRemind;
+        dontRemind = sPrefRemind.getBoolean(DO_NOT_REMIND, false);
+        Log.d("aaffa", "dontRemind= "+dontRemind.toString());
+        Log.d("aaffa", "remind= "+remind);
 
-        AnalyticsApplication application = (AnalyticsApplication) getApplication();
+        if ((!dontRemind) && (!remind)) {
+
+            AlertDialog.Builder ad;
+            ad = new AlertDialog.Builder(CreateRequestActivity.this);
+            ad.setTitle("Обновление.");
+            ad.setMessage("Вы хотите обновить приложение?");
+            ad.setPositiveButton("Обновить", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int arg1) {
+
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.develop.searchmycarandroid"));
+                    startActivity(intent);
+                }
+            });
+            ad.setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int arg1) {
+                }
+            });
+            ad.setNeutralButton("Не напоминать", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int arg1) {
+                    SharedPreferences sPrefRemind;
+                    sPrefRemind = getPreferences(MODE_PRIVATE);
+                    sPrefRemind.edit().putBoolean(DO_NOT_REMIND, true).commit();
+                }
+            });
+            ad.setCancelable(true);
+            ad.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                public void onCancel(DialogInterface dialog) {
+                }
+            });
+
+            ad.show();
+        }
+
+            AnalyticsApplication application = (AnalyticsApplication) getApplication();
         mTracker = application.getDefaultTracker();
         mTracker.setScreenName("Start activity");
         mTracker.send(new HitBuilders.ScreenViewBuilder().build());
