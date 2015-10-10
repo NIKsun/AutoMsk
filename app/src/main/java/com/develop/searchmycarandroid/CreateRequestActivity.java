@@ -207,8 +207,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                     packageInfo = packageManager.getPackageInfo(getPackageName(), 0);
                     Element mainElems = doc.select("#body-content > div > div > div.main-content > div.details-wrapper.apps-secondary-color > div > div.details-section-contents > div:nth-child(4) > div.content").first();
 
-                    Element mainElems2 = doc.select("#body-content > div > div > div.main-content > div:nth-child(1) > div > div.details-section.description.simple.contains-text-link.apps-secondary-color > div.details-section-contents.show-more-container.more > div.show-more-content.text-body").first();
-
+                    Element mainElems2 = doc.select("#body-content > div > div > div.main-content > div:nth-child(1) > div > div.details-section.description.simple.contains-text-link.apps-secondary-color").first();
 
                     if (mainElems2.text().contains("Авто Русь") || (mainElems2.text().contains("АвтоРусь")))
                     {
@@ -218,8 +217,6 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                         ed.commit();
                         MaterialHttp = mainElems2.text().substring(mainElems2.text().indexOf("http"));
                         MaterialHttp = MaterialHttp.substring(0, MaterialHttp.indexOf(" "));
-
-                        //mainElems2.text().substring()
 
                     }
                     else
@@ -318,55 +315,47 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
                 e.printStackTrace();
             }
 
-            SharedPreferences sPrefRemind;
-            sPrefRemind = getPreferences(MODE_PRIVATE);
-            Boolean newVersionMaterial;
-            newVersionMaterial = sPrefRemind.getBoolean(NEW_VERSION_MATERIAL, false);
 
-            if (newVersionMaterial) {
-                int adMobCounter = sPrefRemind.getInt("NewVersionCounter",1);
-                if(adMobCounter == 3) {
-                    sPrefRemind.edit().putInt("NewVersionCounter",1).commit();
-
-                    AlertDialog.Builder ad;
-                    ad = new AlertDialog.Builder(CreateRequestActivity.this);
-                    ad.setTitle("Новая версия.");
-                    ad.setMessage("Скачайте новую версию приложения: Авто Русь!");
-
-                    ad.setPositiveButton("Скачать приложение", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int arg1) {
-
-                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(MaterialHttp));
-                            startActivity(intent);
-                        }
-                    });
-                    ad.setNegativeButton("Отмена", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int arg1) {
-                        }
-                    });
-                    ad.setNeutralButton("Не напоминать", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int arg1) {
-                            SharedPreferences sPrefRemind;
-                            sPrefRemind = getPreferences(MODE_PRIVATE);
-                            sPrefRemind.edit().putBoolean(DO_NOT_REMIND, true).commit();
-                        }
-                    });
-                    ad.setCancelable(true);
-                    ad.setOnCancelListener(new DialogInterface.OnCancelListener() {
-                        public void onCancel(DialogInterface dialog) {
-                        }
-                    });
-
-                    ad.show();
-                }
-                else
-                    sPrefRemind.edit().putInt("AdMobCounter",adMobCounter+1).commit();
-
-            }
         }
 
         SharedPreferences sPrefRemind;
         sPrefRemind = getPreferences(MODE_PRIVATE);
+        Boolean newVersionMaterial;
+        newVersionMaterial = sPrefRemind.getBoolean(NEW_VERSION_MATERIAL, false);
+        if (!newVersionMaterial) {
+            int adMobCounter = sPrefRemind.getInt("NewVersionCounter",3);
+            if(adMobCounter == 3) {
+                sPrefRemind.edit().putInt("NewVersionCounter",1).commit();
+                final Dialog ad = new Dialog(CreateRequestActivity.this);
+                ad.setContentView(R.layout.auto_rus_material);
+                ad.setTitle("Новый продукт линейки!");
+                Button cancel = (Button)ad.findViewById(R.id.cancel_auto_rus);
+                Button download = (Button)ad.findViewById(R.id.download_auto_rus);
+
+                cancel.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mTracker.send(new HitBuilders.EventBuilder().setCategory("AutoRus").setAction("Cancel").build());
+                        ad.dismiss();
+                    }
+                });
+
+                download.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        mTracker.send(new HitBuilders.EventBuilder().setCategory("AutoRus").setAction("Download").build());
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(MaterialHttp));
+                        startActivity(intent);
+                    }
+                });
+
+                ad.setCancelable(true);
+                ad.show();
+            }
+            else
+                sPrefRemind.edit().putInt("NewVersionCounter",adMobCounter+1).commit();
+
+        }
         Boolean dontRemind;
         dontRemind = sPrefRemind.getBoolean(DO_NOT_REMIND, false);
         Log.d("aaffa", "dontRemind= "+dontRemind.toString());
