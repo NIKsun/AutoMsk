@@ -56,6 +56,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
     Boolean isUseSearchInAvito = null;
     Boolean isUseSearchInDrom = null;
     Boolean isUseSearchInAuto = null;
+    Boolean notificationIsActive = null;
     final String SAVED_TEXT_WITH_VERSION = "checkVersion";
     final String DO_NOT_REMIND = "DontRemind";
     static Dialog dialogPicker ;
@@ -67,6 +68,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
         menu.findItem(R.id.cr_req_menu_Avito).setChecked(isUseSearchInAvito);
         menu.findItem(R.id.cr_req_menu_Drom).setChecked(isUseSearchInDrom);
         menu.findItem(R.id.cr_req_menu_Auto).setChecked(isUseSearchInAuto);
+        menu.findItem(R.id.notification).setChecked(notificationIsActive);
         return super.onCreateOptionsMenu(menu);
     }
     @Override
@@ -96,12 +98,19 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
             sPref.edit().putBoolean("isUseSearchInDrom",isUseSearchInDrom).commit();
             item.setChecked(isUseSearchInDrom);
         }
-        else
+        if(item.getTitle().equals("Искать на auto.ru"))
         {
             isUseSearchInAuto = !isUseSearchInAuto;
             SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
             sPref.edit().putBoolean("isUseSearchInAuto",isUseSearchInAuto).commit();
             item.setChecked(isUseSearchInAuto);
+        }
+        else
+        {
+            notificationIsActive = !notificationIsActive;
+            SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
+            sPref.edit().putBoolean("notificationIsActive",notificationIsActive).commit();
+            item.setChecked(notificationIsActive);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -123,6 +132,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
         isUseSearchInAvito = sPref.getBoolean("isUseSearchInAvito",true);
         isUseSearchInDrom = sPref.getBoolean("isUseSearchInDrom",true);
         isUseSearchInAuto = sPref.getBoolean("isUseSearchInAuto",true);
+        notificationIsActive = sPref.getBoolean("notificationIsActive",true);
 
         Button b = (Button) findViewById(R.id.marka_button);
         Button b1 = (Button) findViewById(R.id.model_button);

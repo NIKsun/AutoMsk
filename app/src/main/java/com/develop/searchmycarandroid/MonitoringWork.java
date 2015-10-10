@@ -56,6 +56,9 @@ public class MonitoringWork extends Service {
         nm = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
 
         SharedPreferences sPref = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE);
+        if(!sPref.getBoolean("notificationIsActive",true))
+            return START_NOT_STICKY;
+
         String[] status = getSharedPreferences("SearchMyCarPreferences", Context.MODE_PRIVATE).getString("SearchMyCarService_status", "false;false;false").split(";");
         int number = intent.getIntExtra("SearchMyCarService_serviceID",0);
         if(number == 0)

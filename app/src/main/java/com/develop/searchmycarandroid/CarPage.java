@@ -1,7 +1,9 @@
 package com.develop.searchmycarandroid;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -77,10 +79,16 @@ public class CarPage extends Activity{
             // However it could cause a problem if your server load similar links, so fix it if necessary
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
-                url = removeLastSlash(url);
-                if (!startsWith(url, mUrl) && !mLoadingFinished) {
-                    mUrl = null;
-                    onPageStarted(view, url, null);
+                if (url.startsWith("tel:")) {
+                    Intent intent = new Intent(Intent.ACTION_DIAL, Uri.parse(url));
+                    startActivity(intent);
+                    return true;
+                }else if(url.startsWith("http:") || url.startsWith("https:")) {
+                    url = removeLastSlash(url);
+                    if (!startsWith(url, mUrl) && !mLoadingFinished) {
+                        mUrl = null;
+                        onPageStarted(view, url, null);
+                    }
                 }
                 return false;
             }
