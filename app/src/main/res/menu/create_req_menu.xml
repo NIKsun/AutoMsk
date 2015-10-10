@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/notification"
+        android:title="Push-уведомления"/>
     <item android:id="@+id/cr_req_menu_Auto"
         android:checkable="true"
         android:title="Искать на auto.ru"/>

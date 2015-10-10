@@ -2,6 +2,7 @@ package com.develop.searchmycarandroid;
 
 import android.app.Activity;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.CookieManager;
@@ -161,6 +162,10 @@ public class CarPage extends Activity{
         };
 
         mWebView.setWebViewClient(new MyWebViewClient());
+
+        if (Build.VERSION.SDK_INT>=21){
+            mWebView.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        }
         String url = getIntent().getStringExtra("url");
         mWebView.loadUrl(url);
         if(url.indexOf("drom.ru") != -1)

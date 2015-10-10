@@ -2,7 +2,6 @@ package com.develop.searchmycarandroid;
 
 import android.annotation.TargetApi;
 import android.os.Build;
-import android.util.Log;
 
 import org.jsoup.nodes.Element;
 
