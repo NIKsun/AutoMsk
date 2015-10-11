@@ -322,7 +322,7 @@ public class CreateRequestActivity extends Activity implements OnClickListener {
         sPrefRemind = getPreferences(MODE_PRIVATE);
         Boolean newVersionMaterial;
         newVersionMaterial = sPrefRemind.getBoolean(NEW_VERSION_MATERIAL, false);
-        if (!newVersionMaterial) {
+        if (newVersionMaterial) {
             int adMobCounter = sPrefRemind.getInt("NewVersionCounter",3);
             if(adMobCounter == 3) {
                 sPrefRemind.edit().putInt("NewVersionCounter",1).commit();
